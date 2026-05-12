@@ -8,13 +8,12 @@ html_code = """
 <html>
 <head>
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 
 /* =========================================================
-   RESET + BASE
+    GLOBAL
 ========================================================= */
 
 *{
@@ -25,88 +24,110 @@ html_code = """
 
 body{
     overflow:hidden;
-    background:#070b18;
     font-family:Arial;
+    background:#050814;
 }
 
 /* =========================================================
-   CANVAS (IMPORTANT: SMALLER GAME VIEW, NOT FULL STRETCH)
+    GAME WINDOW (ONLY 1/4 SCREEN EFFECT)
+========================================================= */
+
+.game-wrapper{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+
+    width:1100px;
+    height:650px;
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    border:2px solid rgba(255,255,255,0.08);
+}
+
+/* =========================================================
+    CANVAS
 ========================================================= */
 
 canvas{
+    width:100%;
+    height:100%;
     display:block;
-    margin:auto;
-
-    /* smaller but visible game frame */
-    width:95vw;
-    height:85vh;
-
-    border:2px solid rgba(255,255,255,0.08);
-    border-radius:18px;
 }
 
 /* =========================================================
-   MENU
+    MENU SYSTEM
 ========================================================= */
 
-#menu{
+.menu{
     position:absolute;
     width:100%;
     height:100vh;
-
     display:flex;
     justify-content:center;
     align-items:center;
 
-    background:rgba(0,0,0,0.75);
-
+    background:radial-gradient(circle,#0b1225,#050814);
     z-index:100;
 }
 
-.menu-box{
+.box{
     width:420px;
     background:#111c33;
-    padding:35px;
-    border-radius:20px;
-    text-align:center;
+    padding:30px;
+    border-radius:18px;
     color:white;
+    text-align:center;
 }
 
-.menu-box h1{
-    font-size:48px;
+.box h1{
+    font-size:46px;
     margin-bottom:10px;
 }
 
-.menu-box input{
+.box input, select{
     width:100%;
     padding:12px;
-    margin-top:12px;
-
+    margin-top:10px;
     border-radius:10px;
     border:none;
-
     background:#24324d;
     color:white;
-    font-size:16px;
 }
 
-.menu-box button{
+.box button{
     width:100%;
-    margin-top:20px;
+    margin-top:18px;
     padding:14px;
-
     border:none;
     border-radius:12px;
-
-    background:linear-gradient(to right,#2563eb,#38bdf8);
-
-    color:white;
-    font-size:18px;
     font-weight:bold;
+    background:linear-gradient(to right,#2563eb,#38bdf8);
+    color:white;
+    cursor:pointer;
 }
 
 /* =========================================================
-   POPUP
+    HUD
+========================================================= */
+
+#hud{
+    position:absolute;
+    top:10px;
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    padding:0 30px;
+    color:white;
+    font-weight:bold;
+    z-index:10;
+}
+
+/* =========================================================
+    POPUP
 ========================================================= */
 
 #popup{
@@ -114,36 +135,56 @@ canvas{
     top:50%;
     left:50%;
     transform:translate(-50%,-50%);
-
-    font-size:50px;
     color:white;
-
+    font-size:50px;
     display:none;
-
     z-index:200;
 }
 
 /* =========================================================
-   HUD
+    PAUSE MENU
 ========================================================= */
 
-#hud{
+#pauseMenu{
     position:absolute;
-    top:10px;
     width:100%;
+    height:100%;
+    display:none;
 
-    display:flex;
-    justify-content:space-between;
+    justify-content:center;
+    align-items:center;
 
-    padding:0 40px;
+    background:rgba(0,0,0,0.7);
+    z-index:150;
+}
 
+.pauseBox{
+    background:#1e293b;
+    padding:30px;
+    border-radius:15px;
     color:white;
-    font-size:20px;
-    font-weight:bold;
+    text-align:center;
+}
+
+.pauseBox button{
+    width:100%;
+    margin-top:10px;
+    padding:12px;
 }
 
 /* =========================================================
-   BACKGROUND DECOR (NOT CANVAS, JUST STYLE NOTES)
+    CHARACTER PREVIEW
+========================================================= */
+
+.char{
+    width:40px;
+    height:60px;
+    display:inline-block;
+    margin:5px;
+}
+
+/* =========================================================
+    BACKGROUND DECOR
 ========================================================= */
 
 </style>
@@ -152,218 +193,242 @@ canvas{
 
 <body>
 
-<!-- ================= MENU ================= -->
+<!-- =======================================================
+    MENU
+======================================================= -->
 
-<div id="menu">
-    <div class="menu-box">
+<div class="menu" id="menu">
 
-        <h1>🌙 Jump Battle</h1>
+    <div class="box">
 
-        <input id="p1name" placeholder="Spieler 1 (WASD)">
-        <input id="p2name" placeholder="Spieler 2 (Pfeile)">
+        <h1>⚔ Jump Battle</h1>
 
-        <button onclick="startGame()">Start</button>
+        <input id="p1name" placeholder="Spieler 1 Name">
+        <input id="p2name" placeholder="Spieler 2 Name">
+
+        <select id="p1color">
+            <option value="#ef4444">Rot</option>
+            <option value="#22c55e">Grün</option>
+            <option value="#3b82f6">Blau</option>
+        </select>
+
+        <select id="p2color">
+            <option value="#3b82f6">Blau</option>
+            <option value="#ef4444">Rot</option>
+            <option value="#22c55e">Grün</option>
+        </select>
+
+        <button onclick="startGame()">START GAME</button>
 
     </div>
+
 </div>
 
-<div id="popup"></div>
+<!-- =======================================================
+    PAUSE MENU
+======================================================= -->
 
+<div id="pauseMenu">
+
+    <div class="pauseBox">
+
+        <h2>PAUSE</h2>
+
+        <button onclick="resume()">Weiter</button>
+        <button onclick="backToMenu()">Menü</button>
+
+    </div>
+
+</div>
+
+<!-- =======================================================
+    POPUP + HUD
+======================================================= -->
+
+<div id="popup"></div>
 <div id="hud"></div>
 
-<canvas id="game"></canvas>
+<!-- =======================================================
+    GAME WRAPPER (SMALL VIEW)
+======================================================= -->
+
+<div class="game-wrapper">
+
+    <canvas id="game"></canvas>
+
+</div>
 
 <script>
 
 /* =========================================================
-   CANVAS SETUP
+    CANVAS
 ========================================================= */
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 
 function resize(){
-    canvas.width = 1200;
-    canvas.height = 650;
+    canvas.width=1100;
+    canvas.height=650;
 }
 resize();
 
 /* =========================================================
-   GAME STATE
+    STATE
 ========================================================= */
 
-let gameStarted = false;
-let winner = null;
+let gameStarted=false;
+let paused=false;
+let winner=null;
 
 /* =========================================================
-   PHYSICS
+    BACKGROUND
 ========================================================= */
 
-const gravity = 0.8;
+const stars=[];
 
-/* =========================================================
-   STAR BACKGROUND
-========================================================= */
-
-const stars = [];
-
-for(let i=0;i<180;i++){
+for(let i=0;i<200;i++){
     stars.push({
-        x:Math.random()*1200,
+        x:Math.random()*1100,
         y:Math.random()*650,
         r:Math.random()*2
     });
 }
 
 /* =========================================================
-   COINS SYSTEM
+    BOOST + COINS
 ========================================================= */
 
-let coins = [];
-
-function spawnCoin(){
-    coins.push({
-        x:Math.random()*1100+50,
-        y:Math.random()*300
-    });
-}
+let boost={p1:0,p2:0};
+let coins=[];
 
 setInterval(()=>{
     if(gameStarted && !winner){
-        if(Math.random()<0.6) spawnCoin();
+        if(Math.random()<0.5){
+            coins.push({
+                x:Math.random()*1000,
+                y:Math.random()*300
+            });
+        }
     }
-},3500);
+},4000);
 
 /* =========================================================
-   BOOST SYSTEM
-========================================================= */
-
-let boost = {
-    p1:0,
-    p2:0
-};
-
-/* =========================================================
-   PLATFORM SYSTEM (FIXED + RELIABLE)
+    PLATFORM FIXED
 ========================================================= */
 
 function platforms(){
-    return [
-        {x:0,y:600,w:1200,h:50},
-
+    return[
+        {x:0,y:600,w:1100,h:50},
         {x:150,y:470,w:300,h:20},
-        {x:750,y:470,w:300,h:20},
-
-        {x:450,y:340,w:300,h:20},
-
-        {x:200,y:220,w:250,h:20},
-        {x:750,y:220,w:250,h:20}
+        {x:650,y:470,w:300,h:20},
+        {x:400,y:340,w:300,h:20},
+        {x:200,y:210,w:250,h:20},
+        {x:650,y:210,w:250,h:20}
     ];
 }
 
 /* =========================================================
-   PLAYER CLASS (IMPROVED LOOK)
+    PLAYER
 ========================================================= */
 
 class Player{
-
     constructor(x,y,color,controls){
         this.x=x;
         this.y=y;
         this.w=50;
         this.h=80;
-
         this.color=color;
-
         this.dx=0;
         this.dy=0;
-
         this.score=0;
-
         this.controls=controls;
-
         this.onGround=false;
-
         this.name="";
     }
 
     draw(){
-
-        // body
         ctx.fillStyle=this.color;
         ctx.fillRect(this.x,this.y,this.w,this.h);
 
-        // head
         ctx.fillStyle="#f1c27d";
         ctx.beginPath();
-        ctx.arc(this.x+25,this.y-10,12,0,Math.PI*2);
+        ctx.arc(this.x+25,this.y-10,10,0,Math.PI*2);
         ctx.fill();
     }
 
     update(){
 
-        this.dy += gravity;
+        this.dy+=0.8;
 
-        this.x += this.dx;
-        this.y += this.dy;
+        this.x+=this.dx;
+        this.y+=this.dy;
 
         this.onGround=false;
 
         for(let p of platforms()){
 
-            const hit =
-                this.x < p.x+p.w &&
-                this.x+this.w > p.x &&
-                this.y < p.y+p.h &&
-                this.y+this.h > p.y;
+            let hit=
+                this.x<p.x+p.w&&
+                this.x+this.w>p.x&&
+                this.y<p.y+p.h&&
+                this.y+this.h>p.y;
 
             if(hit){
 
-                // landing fix (IMPORTANT)
-                if(this.dy > 0 && this.y+this.h-this.dy <= p.y){
-                    this.y = p.y - this.h;
-                    this.dy = 0;
-                    this.onGround = true;
+                if(this.dy>0 && this.y+this.h-this.dy<=p.y){
+                    this.y=p.y-this.h;
+                    this.dy=0;
+                    this.onGround=true;
                 }
             }
         }
 
-        if(this.x<0) this.x=0;
-        if(this.x+this.w>1200) this.x=1200-this.w;
+        if(this.x<0)this.x=0;
+        if(this.x+this.w>1100)this.x=1100-this.w;
     }
 }
 
 /* =========================================================
-   INPUT
+    PLAYERS
 ========================================================= */
 
-const keys={};
-
-window.addEventListener("keydown",e=>keys[e.code]=true);
-window.addEventListener("keyup",e=>keys[e.code]=false);
-
-/* =========================================================
-   PLAYERS
-========================================================= */
-
-const p1 = new Player(200,100,"#ef4444",{l:"KeyA",r:"KeyD",j:"KeyW"});
-const p2 = new Player(800,100,"#3b82f6",{l:"ArrowLeft",r:"ArrowRight",j:"ArrowUp"});
+const p1=new Player(200,100,"#ef4444",{l:"KeyA",r:"KeyD",j:"KeyW"});
+const p2=new Player(800,100,"#3b82f6",{l:"ArrowLeft",r:"ArrowRight",j:"ArrowUp"});
 
 p1.id="p1";
 p2.id="p2";
 
 /* =========================================================
-   CONTROLS
+    INPUT
+========================================================= */
+
+const keys={};
+
+window.addEventListener("keydown",e=>{
+    keys[e.code]=true;
+
+    if(e.code==="Escape"){
+        togglePause();
+    }
+});
+
+window.addEventListener("keyup",e=>{
+    keys[e.code]=false;
+});
+
+/* =========================================================
+    CONTROLS
 ========================================================= */
 
 function controls(p){
 
     p.dx=0;
 
-    let sp = (boost[p.id]>0)?11:7;
+    let sp=(boost[p.id]>0)?11:7;
 
-    if(keys[p.controls.l]) p.dx=-sp;
-    if(keys[p.controls.r]) p.dx=sp;
+    if(keys[p.controls.l])p.dx=-sp;
+    if(keys[p.controls.r])p.dx=sp;
 
     if(keys[p.controls.j] && p.onGround){
         p.dy=-15;
@@ -371,7 +436,7 @@ function controls(p){
 }
 
 /* =========================================================
-   START GAME
+    MENU START
 ========================================================= */
 
 function startGame(){
@@ -379,22 +444,38 @@ function startGame(){
     p1.name=document.getElementById("p1name").value||"P1";
     p2.name=document.getElementById("p2name").value||"P2";
 
+    p1.color=document.getElementById("p1color").value;
+    p2.color=document.getElementById("p2color").value;
+
     document.getElementById("menu").style.display="none";
 
     gameStarted=true;
 }
 
 /* =========================================================
-   RESET POS
+    PAUSE
 ========================================================= */
 
-function reset(){
-    p1.x=200;p1.y=100;p1.dy=0;
-    p2.x=800;p2.y=100;p2.dy=0;
+function togglePause(){
+    if(!gameStarted)return;
+
+    paused=!paused;
+
+    document.getElementById("pauseMenu").style.display=
+        paused?"flex":"none";
+}
+
+function resume(){
+    paused=false;
+    document.getElementById("pauseMenu").style.display="none";
+}
+
+function backToMenu(){
+    location.reload();
 }
 
 /* =========================================================
-   COLLISION
+    COLLISION
 ========================================================= */
 
 function collide(a,b){
@@ -402,51 +483,13 @@ function collide(a,b){
 }
 
 /* =========================================================
-   COINS
+    LOOP
 ========================================================= */
 
-function drawCoins(){
+function loop(){
 
-    ctx.fillStyle="gold";
-
-    for(let c of coins){
-
-        ctx.beginPath();
-        ctx.arc(c.x,c.y,8,0,Math.PI*2);
-        ctx.fill();
-    }
-}
-
-function checkCoins(p){
-
-    coins=coins.filter(c=>{
-
-        let hit =
-            p.x < c.x+10 &&
-            p.x+p.w > c.x &&
-            p.y < c.y+10 &&
-            p.y+p.h > c.y;
-
-        if(hit){
-
-            boost[p.id]=8*60;
-
-            return false;
-        }
-
-        return true;
-    });
-}
-
-/* =========================================================
-   DRAW WORLD
-========================================================= */
-
-function draw(){
-
-    // background
-    ctx.fillStyle="#070b18";
-    ctx.fillRect(0,0,1200,650);
+    ctx.fillStyle="#050814";
+    ctx.fillRect(0,0,1100,650);
 
     // stars
     ctx.fillStyle="white";
@@ -457,27 +500,12 @@ function draw(){
     }
 
     // moon
-    ctx.fillStyle="#f8fafc";
+    ctx.fillStyle="white";
     ctx.beginPath();
-    ctx.arc(1000,100,50,0,Math.PI*2);
+    ctx.arc(950,100,50,0,Math.PI*2);
     ctx.fill();
 
-    // platforms
-    for(let p of platforms()){
-        ctx.fillStyle="#334155";
-        ctx.fillRect(p.x,p.y,p.w,p.h);
-    }
-}
-
-/* =========================================================
-   LOOP
-========================================================= */
-
-function loop(){
-
-    draw();
-
-    if(gameStarted && !winner){
+    if(gameStarted && !paused && !winner){
 
         controls(p1);
         controls(p2);
@@ -485,39 +513,34 @@ function loop(){
         p1.update();
         p2.update();
 
-        checkCoins(p1);
-        checkCoins(p2);
-
         if(collide(p1,p2)){
-
             if(p1.dy>0 && p1.y<p2.y){
                 p1.score++;
-                reset();
             }
-
             if(p2.dy>0 && p2.y<p1.y){
                 p2.score++;
-                reset();
             }
         }
 
-        if(p1.score>=3) winner=p1.name;
-        if(p2.score>=3) winner=p2.name;
+        if(p1.score>=3)winner=p1.name;
+        if(p2.score>=3)winner=p2.name;
     }
 
-    drawCoins();
+    for(let p of platforms()){
+        ctx.fillStyle="#334155";
+        ctx.fillRect(p.x,p.y,p.w,p.h);
+    }
 
     p1.draw();
     p2.draw();
 
-    ctx.fillStyle="white";
-    ctx.font="20px Arial";
-    ctx.fillText(p1.name+": "+p1.score,30,30);
-    ctx.fillText(p2.name+": "+p2.score,1000,30);
+    document.getElementById("hud").innerHTML=
+        p1.name+" "+p1.score+" | "+p2.name+" "+p2.score;
 
     if(winner){
+        ctx.fillStyle="white";
         ctx.font="50px Arial";
-        ctx.fillText(winner+" gewinnt!",400,300);
+        ctx.fillText(winner+" gewinnt!",350,300);
     }
 
     requestAnimationFrame(loop);
