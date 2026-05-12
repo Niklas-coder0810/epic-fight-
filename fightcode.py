@@ -1,20 +1,18 @@
+# app.py
+
 import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-html = """
+html_code = """
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
 
 <style>
-
-/* =========================================================
-   BASE
-========================================================= */
 
 *{
     margin:0;
@@ -24,434 +22,359 @@ html = """
 
 body{
     overflow:hidden;
-    background:#050814;
     font-family:Arial;
-}
-
-/* =========================================================
-   GAME FRAME (RECTANGLE ARCADE STYLE)
-========================================================= */
-
-.frame{
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-
-    width:1200px;
-    height:650px;
-
-    border-radius:18px;
-    overflow:hidden;
-
-    border:2px solid rgba(255,255,255,0.08);
+    background:#0b1020;
 }
 
 canvas{
-    width:100%;
-    height:100%;
     display:block;
-}
-
-/* =========================================================
-   SCREENS SYSTEM
-========================================================= */
-
-.screen{
-    position:absolute;
-    width:100%;
+    width:100vw;
     height:100vh;
 }
 
-/* ================= EDITOR ================= */
+/* MENU */
 
-#editor{
+#menu{
+    position:absolute;
+    width:100%;
+    height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
-    background:radial-gradient(circle,#0b1225,#050814);
-    z-index:100;
-}
-
-.panel{
-    width:520px;
-    background:#111c33;
-    padding:25px;
-    border-radius:16px;
-    color:white;
-}
-
-.panel h1{
-    text-align:center;
-    margin-bottom:10px;
-}
-
-.panel input, .panel select{
-    width:100%;
-    padding:10px;
-    margin-top:8px;
-    border:none;
-    border-radius:8px;
-    background:#24324d;
-    color:white;
-}
-
-/* =========================================================
-   HUD
-========================================================= */
-
-#hud{
-    position:absolute;
-    top:10px;
-    width:100%;
-    display:flex;
-    justify-content:space-between;
-    padding:0 25px;
-    color:white;
-    font-weight:bold;
+    background:rgba(0,0,0,0.75);
     z-index:10;
 }
 
-/* =========================================================
-   SCORE ANIMATION
-========================================================= */
+.menu-box{
+    width:min(520px,90vw);
+    background:#1e293b;
+    padding:40px;
+    border-radius:25px;
+    text-align:center;
+    color:white;
+}
 
-#anim{
+.menu-box h1{
+    font-size:52px;
+    margin-bottom:10px;
+}
+
+.menu-box input{
+    width:100%;
+    padding:14px;
+    margin-top:12px;
+    border-radius:12px;
+    border:none;
+    background:#334155;
+    color:white;
+    font-size:18px;
+}
+
+.menu-box button{
+    width:100%;
+    margin-top:20px;
+    padding:16px;
+    border:none;
+    border-radius:14px;
+    font-size:20px;
+    font-weight:bold;
+    color:white;
+    background:linear-gradient(to right,#2563eb,#38bdf8);
+}
+
+/* POPUP */
+
+#popup{
     position:absolute;
     top:50%;
     left:50%;
     transform:translate(-50%,-50%);
-    font-size:80px;
+    font-size:60px;
     color:white;
     display:none;
-    z-index:200;
+    z-index:20;
+    font-weight:bold;
 }
 
-/* =========================================================
-   PAUSE
-========================================================= */
+/* COIN */
 
-#pause{
+.coin{
     position:absolute;
-    width:100%;
-    height:100%;
-    display:none;
-    justify-content:center;
-    align-items:center;
-    background:rgba(0,0,0,0.6);
-    z-index:150;
-}
-
-.box{
-    background:#1e293b;
-    padding:20px;
-    color:white;
-    border-radius:10px;
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    background:gold;
 }
 
 </style>
-
 </head>
 
 <body>
 
-<!-- =======================================================
-   CHARACTER EDITOR
-======================================================= -->
+<div id="menu">
+    <div class="menu-box">
+        <h1>Jump Battle</h1>
 
-<div id="editor" class="screen">
+        <input id="p1name" placeholder="Spieler 1">
+        <input id="p2name" placeholder="Spieler 2">
 
-<div class="panel">
-
-<h1>CHARACTER CREATOR</h1>
-
-<h3>P1</h3>
-<input id="p1name" placeholder="Name">
-<select id="p1color">
-<option value="red">Red</option>
-<option value="blue">Blue</option>
-<option value="green">Green</option>
-</select>
-
-<select id="p1hat">
-<option value="none">No Hat</option>
-<option value="hat">Hat</option>
-<option value="cap">Cap</option>
-</select>
-
-<select id="p1glass">
-<option value="none">No Glasses</option>
-<option value="sun">Sunglasses</option>
-</select>
-
-<hr>
-
-<h3>P2</h3>
-<input id="p2name" placeholder="Name">
-<select id="p2color">
-<option value="blue">Blue</option>
-<option value="red">Red</option>
-<option value="green">Green</option>
-</select>
-
-<select id="p2hat">
-<option value="none">No Hat</option>
-<option value="hat">Hat</option>
-<option value="cap">Cap</option>
-</select>
-
-<select id="p2glass">
-<option value="none">No Glasses</option>
-<option value="sun">Sunglasses</option>
-</select>
-
-<button onclick="start()" style="margin-top:15px;width:100%;padding:12px;background:#2563eb;color:white;border:none;border-radius:8px;">
-START GAME
-</button>
-
+        <button onclick="startGame()">Start</button>
+    </div>
 </div>
 
-</div>
+<div id="popup"></div>
 
-<!-- =======================================================
-   HUD + ANIMATION + PAUSE
-======================================================= -->
-
-<div id="hud"></div>
-<div id="anim"></div>
-
-<div id="pause">
-<div class="box">
-PAUSE
-<br><br>
-<button onclick="resume()">Resume</button>
-<button onclick="location.reload()">Exit</button>
-</div>
-</div>
-
-<!-- =======================================================
-   GAME FRAME
-======================================================= -->
-
-<div class="frame">
-<canvas id="c"></canvas>
-</div>
+<canvas id="game"></canvas>
 
 <script>
 
-/* =========================================================
-   SETUP
-========================================================= */
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-const c=document.getElementById("c");
-const ctx=c.getContext("2d");
+function resize(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize",resize);
 
-c.width=1200;
-c.height=650;
+const gravity = 0.8;
 
-/* =========================================================
-   STATE
-========================================================= */
-
-let game=false;
-let pause=false;
+let gameStarted=false;
 let winner=null;
 
-/* =========================================================
-   ANIMATION
-========================================================= */
+let coins=[];
+let boost = {p1:0,p2:0};
 
-function anim(text){
-const a=document.getElementById("anim");
-a.innerText=text;
-a.style.display="block";
-setTimeout(()=>a.style.display="none",2500);
+function spawnCoin(){
+    coins.push({
+        x:Math.random()*canvas.width,
+        y:Math.random()*canvas.height/2
+    });
 }
 
-/* =========================================================
-   PLATFORM
-========================================================= */
+setInterval(()=>{
+    if(gameStarted && !winner){
+        if(Math.random()<0.6){
+            spawnCoin();
+        }
+    }
+},3000);
 
-function plat(){
-return[
-{x:0,y:600,w:1200,h:50},
-{x:200,y:450,w:300,h:20},
-{x:700,y:450,w:300,h:20},
-{x:450,y:320,w:300,h:20}
-];
+function showPopup(text){
+    const p=document.getElementById("popup");
+    p.innerText=text;
+    p.style.display="block";
+    setTimeout(()=>p.style.display="none",2000);
 }
 
-/* =========================================================
-   PLAYER
-========================================================= */
+/* PLATFORMS */
 
-class P{
-constructor(x,y,c){
-this.x=x;
-this.y=y;
-this.w=50;
-this.h=80;
-this.dx=0;
-this.dy=0;
-this.c=c;
-this.s=0;
-this.g=false;
+function platforms(){
+    return [
+        {x:0,y:canvas.height-50,w:canvas.width,h:50},
+
+        {x:150,y:canvas.height-220,w:300,h:20},
+        {x:canvas.width-450,y:canvas.height-220,w:300,h:20},
+
+        {x:canvas.width/2-150,y:canvas.height-380,w:300,h:20},
+
+        {x:120,y:canvas.height-540,w:260,h:20},
+        {x:canvas.width-380,y:canvas.height-540,w:260,h:20}
+    ];
 }
 
-draw(){
+/* PLAYER */
 
-ctx.fillStyle=this.c;
-ctx.fillRect(this.x,this.y,this.w,this.h);
+class Player{
+    constructor(x,y,color,controls){
+        this.x=x;
+        this.y=y;
+        this.w=60;
+        this.h=90;
+        this.color=color;
+        this.dx=0;
+        this.dy=0;
+        this.score=0;
+        this.controls=controls;
+        this.onGround=false;
+        this.name="";
+    }
 
-// face
-ctx.fillStyle="white";
-ctx.fillRect(this.x+10,this.y+20,6,6);
-ctx.fillRect(this.x+30,this.y+20,6,6);
+    speed(){
+        return (boost[this.id]>0)?12:7;
+    }
 
-ctx.fillRect(this.x+20,this.y+35,8,3);
+    draw(){
+        ctx.fillStyle=this.color;
+        ctx.fillRect(this.x,this.y,this.w,this.h);
+    }
+
+    update(){
+        this.dy+=gravity;
+        this.x+=this.dx;
+        this.y+=this.dy;
+
+        this.onGround=false;
+
+        for(let p of platforms()){
+            const hit =
+                this.x<p.x+p.w &&
+                this.x+this.w>p.x &&
+                this.y<p.y+p.h &&
+                this.y+this.h>p.y;
+
+            if(hit){
+                if(this.dy>0 && this.y+this.h-this.dy<=p.y){
+                    this.y=p.y-this.h;
+                    this.dy=0;
+                    this.onGround=true;
+                }
+            }
+        }
+
+        if(this.x<0)this.x=0;
+        if(this.x+this.w>canvas.width)this.x=canvas.width-this.w;
+    }
 }
 
-upd(){
+/* INPUT */
 
-this.dy+=0.8;
-this.x+=this.dx;
-this.y+=this.dy;
+const keys={};
 
-this.g=false;
+window.addEventListener("keydown",e=>keys[e.code]=true);
+window.addEventListener("keyup",e=>keys[e.code]=false);
 
-for(let p of plat()){
-if(this.x<p.x+p.w&&this.x+this.w>p.x&&this.y<p.y+p.h&&this.y+this.h>p.y){
-if(this.dy>0){
-this.y=p.y-this.h;
-this.dy=0;
-this.g=true;
-}
-}
-}
+/* PLAYERS */
 
-if(this.x<0)this.x=0;
-if(this.x>1150)this.x=1150;
-}
-}
+const p1=new Player(200,100,"#ef4444",{l:"KeyA",r:"KeyD",j:"KeyW"});
+const p2=new Player(700,100,"#3b82f6",{l:"ArrowLeft",r:"ArrowRight",j:"ArrowUp"});
 
-/* =========================================================
-   PLAYERS
-========================================================= */
+p1.id="p1";
+p2.id="p2";
 
-const p1=new P(200,100,"red");
-const p2=new P(800,100,"blue");
+/* CONTROLS */
 
-/* =========================================================
-   INPUT
-========================================================= */
+function controls(p){
+    p.dx=0;
 
-const k={};
+    let sp=(boost[p.id]>0)?11:7;
 
-window.addEventListener("keydown",e=>{
-k[e.code]=true;
-if(e.code==="Escape")pause=!pause;
-});
-window.addEventListener("keyup",e=>k[e.code]=false);
+    if(keys[p.controls.l])p.dx=-sp;
+    if(keys[p.controls.r])p.dx=sp;
 
-/* =========================================================
-   CONTROL
-========================================================= */
-
-function ctrl(p,l,r,j){
-
-p.dx=0;
-
-if(k[l])p.dx=-6;
-if(k[r])p.dx=6;
-
-if(k[j]&&p.g)p.dy=-14;
+    if(keys[p.controls.j] && p.onGround){
+        p.dy=-16;
+    }
 }
 
-/* =========================================================
-   START
-========================================================= */
+/* GAME */
 
-function start(){
-
-p1.c=document.getElementById("p1color").value;
-p2.c=document.getElementById("p2color").value;
-
-document.getElementById("editor").style.display="none";
-
-game=true;
+function startGame(){
+    p1.name=document.getElementById("p1name").value||"P1";
+    p2.name=document.getElementById("p2name").value||"P2";
+    document.getElementById("menu").style.display="none";
+    gameStarted=true;
 }
-
-/* =========================================================
-   RESET
-========================================================= */
 
 function reset(){
-p1.x=200;p2.x=800;
-p1.y=100;p2.y=100;
+    p1.x=200;p1.y=100;p1.dy=0;
+    p2.x=700;p2.y=100;p2.dy=0;
 }
 
-/* =========================================================
-   LOOP
-========================================================= */
+function collide(a,b){
+    return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
+}
+
+/* COINS */
+
+function drawCoins(){
+    ctx.fillStyle="gold";
+    for(let c of coins){
+        ctx.beginPath();
+        ctx.arc(c.x,c.y,8,0,Math.PI*2);
+        ctx.fill();
+    }
+}
+
+function checkCoins(p){
+    coins=coins.filter(c=>{
+        let hit=
+            p.x<c.x+10&&p.x+p.w>c.x&&
+            p.y<c.y+10&&p.y+p.h>c.y;
+
+        if(hit){
+            boost[p.id]=8*60;
+            showPopup(p.name+" SPEED BOOST!");
+            return false;
+        }
+        return true;
+    });
+}
+
+/* LOOP */
 
 function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
-ctx.fillStyle="#050814";
-ctx.fillRect(0,0,1200,650);
+    ctx.fillStyle="#0b1020";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
-for(let p of plat()){
-ctx.fillStyle="#334155";
-ctx.fillRect(p.x,p.y,p.w,p.h);
-}
+    if(gameStarted&&!winner){
 
-if(game && !pause && !winner){
+        controls(p1);
+        controls(p2);
 
-ctrl(p1,"KeyA","KeyD","KeyW");
-ctrl(p2,"ArrowLeft","ArrowRight","ArrowUp");
+        p1.update();
+        p2.update();
 
-p1.upd();
-p2.upd();
+        checkCoins(p1);
+        checkCoins(p2);
 
-if(p1.x<p2.x+50&&p1.x+50>p2.x&&p1.y<p2.y+80&&p1.y+80>p2.y){
+        if(boost.p1>0)boost.p1--;
+        if(boost.p2>0)boost.p2--;
 
-if(p1.dy>0){
-p1.s++;
-anim(p1.s);
-reset();
-}
+        if(collide(p1,p2)){
+            if(p1.dy>0&&p1.y<p2.y){
+                p1.score++;
+                showPopup(p1.name+" +1");
+                reset();
+            }
+            if(p2.dy>0&&p2.y<p1.y){
+                p2.score++;
+                showPopup(p2.name+" +1");
+                reset();
+            }
+        }
 
-if(p2.dy>0){
-p2.s++;
-anim(p2.s);
-reset();
-}
-}
+        if(p1.score>=3)winner=p1.name;
+        if(p2.score>=3)winner=p2.name;
+    }
 
-if(p1.s>=5)winner="P1";
-if(p2.s>=5)winner="P2";
-}
+    for(let p of platforms()){
+        ctx.fillStyle="#334155";
+        ctx.fillRect(p.x,p.y,p.w,p.h);
+    }
 
-p1.draw();
-p2.draw();
+    drawCoins();
 
-document.getElementById("hud").innerHTML=
-"P1: "+p1.s+" | P2: "+p2.s;
+    p1.draw();
+    p2.draw();
 
-if(winner){
-ctx.fillStyle="white";
-ctx.font="50px Arial";
-ctx.fillText(winner+" WIN!",450,300);
-}
+    ctx.fillStyle="white";
+    ctx.font="24px Arial";
+    ctx.fillText(p1.name+": "+p1.score,30,40);
+    ctx.fillText(p2.name+": "+p2.score,canvas.width-180,40);
 
-requestAnimationFrame(loop);
+    if(winner){
+        ctx.font="60px Arial";
+        ctx.fillText(winner+" gewinnt!",canvas.width/2-200,canvas.height/2);
+    }
+
+    requestAnimationFrame(loop);
 }
 
 loop();
-
-function resume(){
-pause=false;
-document.getElementById("pause").style.display="none";
-}
 
 </script>
 
@@ -459,4 +382,4 @@ document.getElementById("pause").style.display="none";
 </html>
 """
 
-components.html(html, height=900)
+components.html(html_code, height=1200)
