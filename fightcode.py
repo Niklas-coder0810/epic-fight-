@@ -1,251 +1,251 @@
-# app.py
 import streamlit as st
-import pygame
-import threading
-import time
+import streamlit.components.v1 as components
 
-# -----------------------------
-# Streamlit Seite
-# -----------------------------
-st.set_page_config(page_title="Jump Battle", layout="centered")
+st.set_page_config(layout="wide")
 
-st.title("🎮 Jump Battle")
-st.markdown("""
-## Steuerung
+html_code = """
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #222;
+}
 
-### Spieler 1
-- W → Springen
-- A → Links
-- D → Rechts
+canvas {
+    background: #333;
+    display: block;
+    margin: auto;
+    border: 3px solid white;
+}
+</style>
+</head>
+<body>
 
-### Spieler 2
-- ↑ → Springen
-- ← → Links
-- → → Rechts
+<canvas id="game" width="1000" height="700"></canvas>
 
-Ziel:
-- Springe auf den Kopf des Gegners
-- Wer zuerst 3 Punkte hat, gewinnt
-""")
+<script>
 
-run_game = st.button("Spiel starten")
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
+const gravity = 0.7;
 
-# -----------------------------
-# Spiel starten
-# -----------------------------
-def start_game():
+const platforms = [
+    {x:0,y:650,w:1000,h:50},
 
-    pygame.init()
+    {x:150,y:520,w:250,h:20},
+    {x:600,y:520,w:250,h:20},
 
-    WIDTH = 1000
-    HEIGHT = 700
+    {x:350,y:390,w:300,h:20},
 
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Jump Battle")
+    {x:150,y:250,w:250,h:20},
+    {x:600,y:250,w:250,h:20},
+];
 
-    clock = pygame.time.Clock()
+class Player {
 
-    # Farben
-    WHITE = (255, 255, 255)
-    BLACK = (0, 0, 0)
-    RED = (220, 50, 50)
-    BLUE = (50, 100, 255)
-    GREEN = (50, 200, 100)
+    constructor(x,y,color,controls){
+        this.x=x;
+        this.y=y;
+        this.w=50;
+        this.h=60;
+        this.color=color;
 
-    GRAVITY = 0.7
-    MOVE_SPEED = 6
-    JUMP_POWER = -14
+        this.dx=0;
+        this.dy=0;
 
-    font = pygame.font.SysFont("Arial", 36)
-    big_font = pygame.font.SysFont("Arial", 60)
+        this.score=0;
 
-    # Plattformen
-    platforms = [
-        pygame.Rect(0, 650, 1000, 50),
+        this.controls=controls;
 
-        pygame.Rect(150, 520, 250, 20),
-        pygame.Rect(600, 520, 250, 20),
+        this.onGround=false;
+    }
 
-        pygame.Rect(350, 390, 300, 20),
+    draw(){
+        ctx.fillStyle=this.color;
+        ctx.fillRect(this.x,this.y,this.w,this.h);
+    }
 
-        pygame.Rect(150, 250, 250, 20),
-        pygame.Rect(600, 250, 250, 20),
-    ]
+    update(){
 
-    class Player:
-        def __init__(self, x, y, color, controls):
-            self.rect = pygame.Rect(x, y, 50, 60)
-            self.color = color
-            self.vel_y = 0
-            self.on_ground = False
-            self.score = 0
-            self.controls = controls
+        this.dy += gravity;
 
-        def move(self, keys):
+        this.x += this.dx;
+        this.y += this.dy;
 
-            dx = 0
+        this.onGround=false;
 
-            if keys[self.controls["left"]]:
-                dx -= MOVE_SPEED
+        for(let p of platforms){
 
-            if keys[self.controls["right"]]:
-                dx += MOVE_SPEED
+            if(
+                this.x < p.x+p.w &&
+                this.x+this.w > p.x &&
+                this.y < p.y+p.h &&
+                this.y+this.h > p.y
+            ){
 
-            self.rect.x += dx
-
-            # Bildschirmbegrenzung
-            if self.rect.left < 0:
-                self.rect.left = 0
-
-            if self.rect.right > WIDTH:
-                self.rect.right = WIDTH
-
-            # Springen
-            if keys[self.controls["jump"]] and self.on_ground:
-                self.vel_y = JUMP_POWER
-                self.on_ground = False
-
-        def apply_gravity(self):
-
-            self.vel_y += GRAVITY
-            self.rect.y += self.vel_y
-
-            self.on_ground = False
-
-            for platform in platforms:
-                if self.rect.colliderect(platform):
-
-                    if self.vel_y > 0:
-                        self.rect.bottom = platform.top
-                        self.vel_y = 0
-                        self.on_ground = True
-
-        def draw(self):
-            pygame.draw.rect(screen, self.color, self.rect)
-
-    # Spieler erstellen
-    player1 = Player(
-        200,
-        100,
-        RED,
-        {
-            "left": pygame.K_a,
-            "right": pygame.K_d,
-            "jump": pygame.K_w
+                if(this.dy > 0){
+                    this.y = p.y - this.h;
+                    this.dy = 0;
+                    this.onGround=true;
+                }
+            }
         }
-    )
 
-    player2 = Player(
-        700,
-        100,
-        BLUE,
-        {
-            "left": pygame.K_LEFT,
-            "right": pygame.K_RIGHT,
-            "jump": pygame.K_UP
+        if(this.x < 0) this.x = 0;
+        if(this.x + this.w > canvas.width)
+            this.x = canvas.width - this.w;
+    }
+}
+
+const keys = {};
+
+document.addEventListener("keydown",(e)=>{
+    keys[e.code]=true;
+});
+
+document.addEventListener("keyup",(e)=>{
+    keys[e.code]=false;
+});
+
+const p1 = new Player(
+    200,
+    100,
+    "red",
+    {
+        left:"KeyA",
+        right:"KeyD",
+        jump:"KeyW"
+    }
+);
+
+const p2 = new Player(
+    700,
+    100,
+    "blue",
+    {
+        left:"ArrowLeft",
+        right:"ArrowRight",
+        jump:"ArrowUp"
+    }
+);
+
+function controls(player){
+
+    player.dx = 0;
+
+    if(keys[player.controls.left]){
+        player.dx = -6;
+    }
+
+    if(keys[player.controls.right]){
+        player.dx = 6;
+    }
+
+    if(keys[player.controls.jump] && player.onGround){
+        player.dy = -14;
+    }
+}
+
+function reset(){
+
+    p1.x=200;
+    p1.y=100;
+    p1.dy=0;
+
+    p2.x=700;
+    p2.y=100;
+    p2.dy=0;
+}
+
+let winner = null;
+
+function collision(a,b){
+
+    return (
+        a.x < b.x+b.w &&
+        a.x+a.w > b.x &&
+        a.y < b.y+b.h &&
+        a.y+a.h > b.y
+    );
+}
+
+function gameLoop(){
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    controls(p1);
+    controls(p2);
+
+    p1.update();
+    p2.update();
+
+    // Plattformen
+    ctx.fillStyle="lime";
+
+    for(let p of platforms){
+        ctx.fillRect(p.x,p.y,p.w,p.h);
+    }
+
+    // Kopf Treffer
+    if(collision(p1,p2) && !winner){
+
+        if(p1.dy > 0 && p1.y < p2.y){
+            p1.score++;
+            reset();
         }
-    )
 
-    winner = None
+        else if(p2.dy > 0 && p2.y < p1.y){
+            p2.score++;
+            reset();
+        }
+    }
 
-    def reset_positions():
-        player1.rect.x = 200
-        player1.rect.y = 100
-        player1.vel_y = 0
+    if(p1.score >= 3){
+        winner = "Spieler 1";
+    }
 
-        player2.rect.x = 700
-        player2.rect.y = 100
-        player2.vel_y = 0
+    if(p2.score >= 3){
+        winner = "Spieler 2";
+    }
 
-    # -----------------------------
-    # Game Loop
-    # -----------------------------
-    running = True
+    p1.draw();
+    p2.draw();
 
-    while running:
+    // Score
+    ctx.fillStyle="white";
+    ctx.font="30px Arial";
 
-        clock.tick(60)
+    ctx.fillText(
+        "Spieler 1: " + p1.score +
+        "    Spieler 2: " + p2.score,
+        280,
+        40
+    );
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+    if(winner){
 
-        if not winner:
+        ctx.font="60px Arial";
 
-            keys = pygame.key.get_pressed()
+        ctx.fillText(
+            winner + " gewinnt!",
+            250,
+            300
+        );
+    }
 
-            player1.move(keys)
-            player2.move(keys)
+    requestAnimationFrame(gameLoop);
+}
 
-            player1.apply_gravity()
-            player2.apply_gravity()
+gameLoop();
 
-            # Kopf-Sprung Erkennung
-            if player1.rect.colliderect(player2.rect):
+</script>
 
-                # Spieler 1 springt auf Spieler 2
-                if (
-                    player1.vel_y > 0
-                    and player1.rect.bottom < player2.rect.centery
-                ):
-                    player1.score += 1
-                    reset_positions()
-                    time.sleep(0.5)
+</body>
+</html>
+"""
 
-                # Spieler 2 springt auf Spieler 1
-                elif (
-                    player2.vel_y > 0
-                    and player2.rect.bottom < player1.rect.centery
-                ):
-                    player2.score += 1
-                    reset_positions()
-                    time.sleep(0.5)
-
-            # Gewinner prüfen
-            if player1.score >= 3:
-                winner = "Spieler 1"
-
-            if player2.score >= 3:
-                winner = "Spieler 2"
-
-        # -----------------------------
-        # Zeichnen
-        # -----------------------------
-        screen.fill(WHITE)
-
-        # Plattformen
-        for platform in platforms:
-            pygame.draw.rect(screen, GREEN, platform)
-
-        # Spieler
-        player1.draw()
-        player2.draw()
-
-        # Scores
-        score_text = font.render(
-            f"Spieler 1: {player1.score}      Spieler 2: {player2.score}",
-            True,
-            BLACK
-        )
-
-        screen.blit(score_text, (250, 20))
-
-        # Gewinnertext
-        if winner:
-            win_text = big_font.render(
-                f"{winner} gewinnt!",
-                True,
-                BLACK
-            )
-
-            screen.blit(win_text, (300, 300))
-
-        pygame.display.update()
-
-    pygame.quit()
-
-
-if run_game:
-    game_thread = threading.Thread(target=start_game)
-    game_thread.start()
+components.html(html_code, height=720)
