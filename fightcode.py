@@ -21,105 +21,152 @@ html_code = """
 
 body{
     overflow:hidden;
-    font-family:Arial;
-    background:#0f172a;
+    font-family:Arial, sans-serif;
+    background:#0b1020;
 }
 
+canvas{
+    display:block;
+    width:100vw;
+    height:100vh;
+}
+
+/* ---------------- MENU ---------------- */
+
 #menu{
+
     position:absolute;
+
     width:100%;
     height:100vh;
 
     display:flex;
+
     justify-content:center;
     align-items:center;
 
-    background:rgba(0,0,0,0.8);
+    background:rgba(5,10,25,0.85);
 
     z-index:10;
 }
 
 .menu-box{
 
-    width:420px;
+    width:min(90vw,550px);
 
-    background:#1e293b;
+    background:rgba(20,30,55,0.95);
+
+    border:1px solid rgba(255,255,255,0.08);
+
+    border-radius:28px;
 
     padding:40px;
 
-    border-radius:25px;
-
     text-align:center;
 
-    box-shadow:0 0 40px rgba(0,0,0,0.5);
+    box-shadow:0 0 50px rgba(0,0,0,0.5);
+
+    backdrop-filter:blur(10px);
 }
 
 .menu-box h1{
 
-    color:white;
+    color:#f8fafc;
 
-    font-size:48px;
+    font-size:56px;
 
-    margin-bottom:25px;
+    margin-bottom:12px;
+}
+
+.subtitle{
+
+    color:#94a3b8;
+
+    margin-bottom:28px;
+
+    font-size:18px;
+}
+
+.input-label{
+
+    color:#cbd5e1;
+
+    text-align:left;
+
+    margin-top:16px;
+
+    margin-bottom:8px;
+
+    font-size:16px;
+
+    font-weight:bold;
 }
 
 .menu-box input{
 
     width:100%;
 
-    padding:15px;
-
-    margin-top:15px;
+    padding:16px;
 
     border:none;
 
-    border-radius:12px;
+    border-radius:14px;
 
-    background:#334155;
+    background:#24324d;
 
     color:white;
 
     font-size:18px;
+
+    outline:none;
+
+    border:2px solid transparent;
+}
+
+.menu-box input:focus{
+
+    border:2px solid #60a5fa;
 }
 
 .menu-box button{
 
     width:100%;
 
-    margin-top:25px;
+    margin-top:28px;
 
-    padding:15px;
+    padding:18px;
 
     border:none;
 
-    border-radius:12px;
+    border-radius:16px;
 
     font-size:22px;
+
+    font-weight:bold;
 
     color:white;
 
     cursor:pointer;
 
-    background:linear-gradient(to right,#3b82f6,#06b6d4);
+    background:linear-gradient(to right,#2563eb,#38bdf8);
 
     transition:0.2s;
 }
 
 .menu-box button:hover{
+
     transform:scale(1.03);
 }
 
 .controls{
 
-    margin-top:20px;
+    margin-top:22px;
 
     color:#cbd5e1;
 
-    line-height:1.8;
-}
+    line-height:2;
 
-canvas{
-    display:block;
+    font-size:17px;
 }
 
 </style>
@@ -131,21 +178,46 @@ canvas{
 
     <div class="menu-box">
 
-        <h1>Jump Battle</h1>
+        <h1>🌙 Jump Battle</h1>
 
-        <input id="p1name" placeholder="Name Spieler 1" value="Rot">
-        <input id="p2name" placeholder="Name Spieler 2" value="Blau">
+        <div class="subtitle">
+            Gib eure Namen ein und startet das Duell
+        </div>
+
+        <div class="input-label">
+            Spieler 1 Name
+        </div>
+
+        <input
+            id="p1name"
+            type="text"
+            placeholder="z.B. Max"
+            value=""
+        >
+
+        <div class="input-label">
+            Spieler 2 Name
+        </div>
+
+        <input
+            id="p2name"
+            type="text"
+            placeholder="z.B. Leon"
+            value=""
+        >
 
         <div class="controls">
 
-            <p><b>Spieler 1:</b> WASD</p>
-            <p><b>Spieler 2:</b> Pfeiltasten</p>
-            <p>Springe auf den Kopf des Gegners!</p>
-            <p>Erster bis 3 Punkte gewinnt.</p>
+            <div>🔴 Spieler 1 → WASD</div>
+            <div>🔵 Spieler 2 → Pfeiltasten</div>
+            <div>👑 Auf den Kopf springen = Punkt</div>
+            <div>🏆 Erster bis 3 gewinnt</div>
 
         </div>
 
-        <button onclick="startGame()">Spiel starten</button>
+        <button onclick="startGame()">
+            Spiel starten
+        </button>
 
     </div>
 
@@ -158,66 +230,86 @@ canvas{
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-window.addEventListener("resize",()=>{
+function resizeCanvas(){
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+}
 
-});
+resizeCanvas();
 
-const gravity = 0.7;
+window.addEventListener("resize", resizeCanvas);
+
+const gravity = 0.8;
 
 let gameStarted = false;
 let winner = null;
 
-const platforms = [
+/* ---------------- STARS ---------------- */
 
-    {
-        x:0,
-        y:canvas.height-40,
-        w:canvas.width,
-        h:40
-    },
+const stars = [];
 
-    {
-        x:150,
-        y:canvas.height-180,
-        w:320,
-        h:20
-    },
+for(let i=0;i<150;i++){
 
-    {
-        x:canvas.width-470,
-        y:canvas.height-180,
-        w:320,
-        h:20
-    },
+    stars.push({
 
-    {
-        x:canvas.width/2-170,
-        y:canvas.height-330,
-        w:340,
-        h:20
-    },
+        x:Math.random()*window.innerWidth,
+        y:Math.random()*window.innerHeight,
+        r:Math.random()*2
+    });
+}
 
-    {
-        x:100,
-        y:canvas.height-480,
-        w:280,
-        h:20
-    },
+/* ---------------- PLATFORMS ---------------- */
 
-    {
-        x:canvas.width-380,
-        y:canvas.height-480,
-        w:280,
-        h:20
-    }
+function getPlatforms(){
 
-];
+    return [
+
+        {
+            x:0,
+            y:canvas.height-45,
+            w:canvas.width,
+            h:45
+        },
+
+        {
+            x:150,
+            y:canvas.height-220,
+            w:340,
+            h:24
+        },
+
+        {
+            x:canvas.width-490,
+            y:canvas.height-220,
+            w:340,
+            h:24
+        },
+
+        {
+            x:canvas.width/2-170,
+            y:canvas.height-380,
+            w:340,
+            h:24
+        },
+
+        {
+            x:120,
+            y:canvas.height-540,
+            w:280,
+            h:24
+        },
+
+        {
+            x:canvas.width-400,
+            y:canvas.height-540,
+            w:280,
+            h:24
+        }
+    ];
+}
+
+/* ---------------- PLAYER ---------------- */
 
 class Player{
 
@@ -227,7 +319,7 @@ class Player{
         this.y=y;
 
         this.w=70;
-        this.h=90;
+        this.h=100;
 
         this.color=color;
 
@@ -245,14 +337,60 @@ class Player{
 
     draw(){
 
+        // Kopf
+        ctx.fillStyle="#f1c27d";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            this.x + this.w/2,
+            this.y + 20,
+            18,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        // Körper
         ctx.fillStyle=this.color;
 
-        ctx.shadowColor=this.color;
-        ctx.shadowBlur=20;
+        ctx.fillRect(
+            this.x + 15,
+            this.y + 40,
+            40,
+            40
+        );
 
-        ctx.fillRect(this.x,this.y,this.w,this.h);
+        // Beine
+        ctx.fillRect(
+            this.x + 18,
+            this.y + 80,
+            12,
+            20
+        );
 
-        ctx.shadowBlur=0;
+        ctx.fillRect(
+            this.x + 40,
+            this.y + 80,
+            12,
+            20
+        );
+
+        // Arme
+        ctx.fillRect(
+            this.x + 2,
+            this.y + 45,
+            12,
+            10
+        );
+
+        ctx.fillRect(
+            this.x + 56,
+            this.y + 45,
+            12,
+            10
+        );
     }
 
     update(){
@@ -262,31 +400,49 @@ class Player{
         this.x += this.dx;
         this.y += this.dy;
 
-        this.onGround=false;
+        this.onGround = false;
+
+        const platforms = getPlatforms();
 
         for(let p of platforms){
 
-            if(
+            const touching =
 
                 this.x < p.x+p.w &&
                 this.x+this.w > p.x &&
                 this.y < p.y+p.h &&
-                this.y+this.h > p.y
+                this.y+this.h > p.y;
 
-            ){
+            if(touching){
 
-                if(this.dy > 0){
+                // OBEN landen
+                if(
+                    this.dy > 0 &&
+                    this.y + this.h - this.dy <= p.y
+                ){
 
                     this.y = p.y - this.h;
 
                     this.dy = 0;
 
-                    this.onGround=true;
+                    this.onGround = true;
+                }
+
+                // UNTEN blockieren
+                else if(
+                    this.dy < 0 &&
+                    this.y >= p.y + p.h - 5
+                ){
+
+                    this.y = p.y + p.h;
+
+                    this.dy = 0;
                 }
             }
         }
 
         if(this.x < 0){
+
             this.x = 0;
         }
 
@@ -297,18 +453,18 @@ class Player{
     }
 }
 
+/* ---------------- CONTROLS ---------------- */
+
 const keys = {};
 
 window.addEventListener("keydown",(e)=>{
 
-    keys[e.code]=true;
-
+    keys[e.code] = true;
 });
 
 window.addEventListener("keyup",(e)=>{
 
-    keys[e.code]=false;
-
+    keys[e.code] = false;
 });
 
 const p1 = new Player(
@@ -339,40 +495,42 @@ const p2 = new Player(
     }
 );
 
-function startGame(){
-
-    const name1 =
-        document.getElementById("p1name").value;
-
-    const name2 =
-        document.getElementById("p2name").value;
-
-    p1.name = name1 || "Rot";
-    p2.name = name2 || "Blau";
-
-    document.getElementById("menu").style.display="none";
-
-    gameStarted=true;
-}
-
 function controls(player){
 
-    player.dx=0;
+    player.dx = 0;
 
     if(keys[player.controls.left]){
 
-        player.dx=-8;
+        player.dx = -8;
     }
 
     if(keys[player.controls.right]){
 
-        player.dx=8;
+        player.dx = 8;
     }
 
     if(keys[player.controls.jump] && player.onGround){
 
-        player.dy=-16;
+        player.dy = -17;
     }
+}
+
+/* ---------------- GAME ---------------- */
+
+function startGame(){
+
+    p1.name =
+        document.getElementById("p1name").value
+        || "Rot";
+
+    p2.name =
+        document.getElementById("p2name").value
+        || "Blau";
+
+    document.getElementById("menu").style.display =
+        "none";
+
+    gameStarted = true;
 }
 
 function collision(a,b){
@@ -383,69 +541,121 @@ function collision(a,b){
         a.x+a.w > b.x &&
         a.y < b.y+b.h &&
         a.y+a.h > b.y
-
     );
 }
 
 function reset(){
 
-    p1.x=200;
-    p1.y=canvas.height-300;
-    p1.dy=0;
+    p1.x = 200;
+    p1.y = canvas.height-300;
+    p1.dy = 0;
 
-    p2.x=canvas.width-300;
-    p2.y=canvas.height-300;
-    p2.dy=0;
+    p2.x = canvas.width-300;
+    p2.y = canvas.height-300;
+    p2.dy = 0;
 }
+
+/* ---------------- DRAW ---------------- */
 
 function drawBackground(){
 
     const grad =
         ctx.createLinearGradient(0,0,0,canvas.height);
 
-    grad.addColorStop(0,"#0f172a");
-    grad.addColorStop(1,"#1e293b");
+    grad.addColorStop(0,"#0b1020");
+    grad.addColorStop(1,"#111827");
 
-    ctx.fillStyle=grad;
+    ctx.fillStyle = grad;
 
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    // Sterne
+
+    ctx.fillStyle = "white";
+
+    for(let s of stars){
+
+        ctx.beginPath();
+
+        ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+
+        ctx.fill();
+    }
+
+    // Mond
+
+    ctx.fillStyle = "#f8fafc";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        canvas.width-180,
+        120,
+        60,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
 }
 
 function drawPlatforms(){
 
+    const platforms = getPlatforms();
+
     for(let p of platforms){
 
-        ctx.fillStyle="#22c55e";
+        ctx.fillStyle = "#334155";
 
-        ctx.shadowColor="#22c55e";
-        ctx.shadowBlur=20;
+        ctx.fillRect(
+            p.x,
+            p.y,
+            p.w,
+            p.h
+        );
 
-        ctx.fillRect(p.x,p.y,p.w,p.h);
+        ctx.fillStyle = "#64748b";
 
-        ctx.shadowBlur=0;
+        ctx.fillRect(
+            p.x,
+            p.y,
+            p.w,
+            5
+        );
     }
 }
 
 function drawScores(){
 
-    ctx.fillStyle="white";
+    ctx.fillStyle = "white";
 
-    ctx.font="bold 32px Arial";
+    ctx.font = "bold 30px Arial";
 
     ctx.fillText(
 
         p1.name + ": " + p1.score,
 
-        50,
+        40,
 
         50
     );
 
+    const rightText =
+        p2.name + ": " + p2.score;
+
+    const width =
+        ctx.measureText(rightText).width;
+
     ctx.fillText(
 
-        p2.name + ": " + p2.score,
+        rightText,
 
-        canvas.width-250,
+        canvas.width - width - 40,
 
         50
     );
@@ -453,24 +663,27 @@ function drawScores(){
 
 function drawWinner(){
 
-    ctx.fillStyle="white";
+    ctx.fillStyle = "white";
 
-    ctx.font="bold 72px Arial";
+    ctx.font = "bold 70px Arial";
 
-    const text = winner + " gewinnt!";
+    const text =
+        winner + " gewinnt!";
 
-    const textWidth =
+    const width =
         ctx.measureText(text).width;
 
     ctx.fillText(
 
         text,
 
-        canvas.width/2 - textWidth/2,
+        canvas.width/2 - width/2,
 
         canvas.height/2
     );
 }
+
+/* ---------------- LOOP ---------------- */
 
 function gameLoop(){
 
@@ -486,14 +699,20 @@ function gameLoop(){
 
         if(collision(p1,p2)){
 
-            if(p1.dy > 0 && p1.y < p2.y){
+            if(
+                p1.dy > 0 &&
+                p1.y < p2.y
+            ){
 
                 p1.score++;
 
                 reset();
             }
 
-            else if(p2.dy > 0 && p2.y < p1.y){
+            else if(
+                p2.dy > 0 &&
+                p2.y < p1.y
+            ){
 
                 p2.score++;
 
@@ -535,4 +754,4 @@ gameLoop();
 </html>
 """
 
-components.html(html_code, height=1080)
+components.html(html_code, height=1200)
