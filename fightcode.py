@@ -1,5 +1,4 @@
 # app.py
-
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -21,152 +20,98 @@ html_code = """
 
 body{
     overflow:hidden;
-    font-family:Arial, sans-serif;
+    font-family:Arial;
     background:#0b1020;
 }
 
-canvas{
-    display:block;
-    width:100vw;
-    height:100vh;
+/* =========================================================
+   ARCADE WINDOW (1/4 SCREEN + LANDSCAPE FIX)
+========================================================= */
+
+.game-wrapper{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+
+    width:1100px;
+    height:620px;
+
+    border-radius:18px;
+    overflow:hidden;
+
+    border:2px solid rgba(255,255,255,0.08);
 }
 
-/* ---------------- MENU ---------------- */
+canvas{
+    width:100%;
+    height:100%;
+    display:block;
+}
+
+/* =========================================================
+   MENU
+========================================================= */
 
 #menu{
-
     position:absolute;
-
     width:100%;
     height:100vh;
-
     display:flex;
-
     justify-content:center;
     align-items:center;
-
-    background:rgba(5,10,25,0.85);
-
+    background:rgba(0,0,0,0.7);
     z-index:10;
 }
 
-.menu-box{
-
-    width:min(90vw,550px);
-
-    background:rgba(20,30,55,0.95);
-
-    border:1px solid rgba(255,255,255,0.08);
-
-    border-radius:28px;
-
-    padding:40px;
-
+.box{
+    width:420px;
+    background:#111c33;
+    padding:25px;
+    border-radius:15px;
+    color:white;
     text-align:center;
-
-    box-shadow:0 0 50px rgba(0,0,0,0.5);
-
-    backdrop-filter:blur(10px);
 }
 
-.menu-box h1{
-
-    color:#f8fafc;
-
-    font-size:56px;
-
-    margin-bottom:12px;
-}
-
-.subtitle{
-
-    color:#94a3b8;
-
-    margin-bottom:28px;
-
-    font-size:18px;
-}
-
-.input-label{
-
-    color:#cbd5e1;
-
-    text-align:left;
-
-    margin-top:16px;
-
-    margin-bottom:8px;
-
-    font-size:16px;
-
-    font-weight:bold;
-}
-
-.menu-box input{
-
+select,input{
     width:100%;
-
-    padding:16px;
-
+    padding:10px;
+    margin-top:10px;
     border:none;
-
-    border-radius:14px;
-
+    border-radius:10px;
     background:#24324d;
-
     color:white;
-
-    font-size:18px;
-
-    outline:none;
-
-    border:2px solid transparent;
 }
 
-.menu-box input:focus{
+/* =========================================================
+   END SCREEN
+========================================================= */
 
-    border:2px solid #60a5fa;
-}
-
-.menu-box button{
-
+#end{
+    position:absolute;
     width:100%;
-
-    margin-top:28px;
-
-    padding:18px;
-
-    border:none;
-
-    border-radius:16px;
-
-    font-size:22px;
-
-    font-weight:bold;
-
+    height:100%;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    background:rgba(0,0,0,0.85);
     color:white;
+    z-index:100;
+}
 
+#end h1{
+    font-size:60px;
+}
+
+#end button{
+    margin-top:20px;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    background:#2563eb;
+    color:white;
     cursor:pointer;
-
-    background:linear-gradient(to right,#2563eb,#38bdf8);
-
-    transition:0.2s;
-}
-
-.menu-box button:hover{
-
-    transform:scale(1.03);
-}
-
-.controls{
-
-    margin-top:22px;
-
-    color:#cbd5e1;
-
-    line-height:2;
-
-    font-size:17px;
 }
 
 </style>
@@ -175,578 +120,226 @@ canvas{
 <body>
 
 <div id="menu">
+    <div class="box">
 
-    <div class="menu-box">
+        <h2>CHARACTER</h2>
 
-        <h1>🌙 Jump Battle</h1>
+        <input id="p1name" placeholder="P1 Name">
+        <select id="p1color">
+            <option value="red">Rot</option>
+            <option value="blue">Blau</option>
+            <option value="green">Grün</option>
+            <option value="yellow">Gelb</option>
+            <option value="pink">Pink</option>
+        </select>
 
-        <div class="subtitle">
-            Gib eure Namen ein und startet das Duell
-        </div>
+        <input id="p2name" placeholder="P2 Name">
+        <select id="p2color">
+            <option value="blue">Blau</option>
+            <option value="red">Rot</option>
+            <option value="green">Grün</option>
+            <option value="yellow">Gelb</option>
+            <option value="pink">Pink</option>
+        </select>
 
-        <div class="input-label">
-            Spieler 1 Name
-        </div>
-
-        <input
-            id="p1name"
-            type="text"
-            placeholder="z.B. Max"
-            value=""
-        >
-
-        <div class="input-label">
-            Spieler 2 Name
-        </div>
-
-        <input
-            id="p2name"
-            type="text"
-            placeholder="z.B. Leon"
-            value=""
-        >
-
-        <div class="controls">
-
-            <div>🔴 Spieler 1 → WASD</div>
-            <div>🔵 Spieler 2 → Pfeiltasten</div>
-            <div>👑 Auf den Kopf springen = Punkt</div>
-            <div>🏆 Erster bis 3 gewinnt</div>
-
-        </div>
-
-        <button onclick="startGame()">
-            Spiel starten
-        </button>
+        <button onclick="start()">START</button>
 
     </div>
-
 </div>
 
-<canvas id="game"></canvas>
+<div id="end">
+    <h1 id="winnerText">WINNER</h1>
+    <div>🏆 CEREMONY 🏆</div>
+    <button onclick="location.reload()">Zurück zum Menü</button>
+</div>
+
+<div class="game-wrapper">
+<canvas id="c"></canvas>
+</div>
 
 <script>
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+const c=document.getElementById("c");
+const ctx=c.getContext("2d");
 
-function resizeCanvas(){
+c.width=1100;
+c.height=620;
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+let game=false;
+let winner=null;
+
+const g=0.8;
+
+/* ================= PLATFORMS (FIXED HEIGHT) ================= */
+
+function plat(){
+return[
+{x:0,y:580,w:1100,h:40},
+{x:150,y:450,w:300,h:25},
+{x:700,y:450,w:300,h:25},
+{x:420,y:320,w:260,h:25}
+];
 }
 
-resizeCanvas();
+/* ================= PLAYER ================= */
 
-window.addEventListener("resize", resizeCanvas);
-
-const gravity = 0.8;
-
-let gameStarted = false;
-let winner = null;
-
-/* ---------------- STARS ---------------- */
-
-const stars = [];
-
-for(let i=0;i<150;i++){
-
-    stars.push({
-
-        x:Math.random()*window.innerWidth,
-        y:Math.random()*window.innerHeight,
-        r:Math.random()*2
-    });
+class P{
+constructor(x,y,color){
+this.x=x;
+this.y=y;
+this.w=50;
+this.h=80;
+this.dx=0;
+this.dy=0;
+this.c=color;
+this.score=0;
+this.g=false;
 }
 
-/* ---------------- PLATFORMS ---------------- */
+draw(){
 
-function getPlatforms(){
+ctx.fillStyle=this.c;
+ctx.fillRect(this.x,this.y,this.w,this.h);
 
-    return [
-
-        {
-            x:0,
-            y:canvas.height-45,
-            w:canvas.width,
-            h:45
-        },
-
-        {
-            x:150,
-            y:canvas.height-220,
-            w:340,
-            h:24
-        },
-
-        {
-            x:canvas.width-490,
-            y:canvas.height-220,
-            w:340,
-            h:24
-        },
-
-        {
-            x:canvas.width/2-170,
-            y:canvas.height-380,
-            w:340,
-            h:24
-        },
-
-        {
-            x:120,
-            y:canvas.height-540,
-            w:280,
-            h:24
-        },
-
-        {
-            x:canvas.width-400,
-            y:canvas.height-540,
-            w:280,
-            h:24
-        }
-    ];
+// face
+ctx.fillStyle="white";
+ctx.fillRect(this.x+10,this.y+20,6,6);
+ctx.fillRect(this.x+30,this.y+20,6,6);
 }
 
-/* ---------------- PLAYER ---------------- */
+upd(){
 
-class Player{
+this.dy+=g;
+this.x+=this.dx;
+this.y+=this.dy;
 
-    constructor(x,y,color,controls){
+this.g=false;
 
-        this.x=x;
-        this.y=y;
+for(let p of plat()){
 
-        this.w=70;
-        this.h=100;
+let hit=
+this.x<p.x+p.w&&
+this.x+this.w>p.x&&
+this.y<p.y+p.h&&
+this.y+this.h>p.y;
 
-        this.color=color;
+if(hit){
 
-        this.dx=0;
-        this.dy=0;
-
-        this.score=0;
-
-        this.controls=controls;
-
-        this.onGround=false;
-
-        this.name="Spieler";
-    }
-
-    draw(){
-
-        // Kopf
-        ctx.fillStyle="#f1c27d";
-
-        ctx.beginPath();
-
-        ctx.arc(
-            this.x + this.w/2,
-            this.y + 20,
-            18,
-            0,
-            Math.PI*2
-        );
-
-        ctx.fill();
-
-        // Körper
-        ctx.fillStyle=this.color;
-
-        ctx.fillRect(
-            this.x + 15,
-            this.y + 40,
-            40,
-            40
-        );
-
-        // Beine
-        ctx.fillRect(
-            this.x + 18,
-            this.y + 80,
-            12,
-            20
-        );
-
-        ctx.fillRect(
-            this.x + 40,
-            this.y + 80,
-            12,
-            20
-        );
-
-        // Arme
-        ctx.fillRect(
-            this.x + 2,
-            this.y + 45,
-            12,
-            10
-        );
-
-        ctx.fillRect(
-            this.x + 56,
-            this.y + 45,
-            12,
-            10
-        );
-    }
-
-    update(){
-
-        this.dy += gravity;
-
-        this.x += this.dx;
-        this.y += this.dy;
-
-        this.onGround = false;
-
-        const platforms = getPlatforms();
-
-        for(let p of platforms){
-
-            const touching =
-
-                this.x < p.x+p.w &&
-                this.x+this.w > p.x &&
-                this.y < p.y+p.h &&
-                this.y+this.h > p.y;
-
-            if(touching){
-
-                // OBEN landen
-                if(
-                    this.dy > 0 &&
-                    this.y + this.h - this.dy <= p.y
-                ){
-
-                    this.y = p.y - this.h;
-
-                    this.dy = 0;
-
-                    this.onGround = true;
-                }
-
-                // UNTEN blockieren
-                else if(
-                    this.dy < 0 &&
-                    this.y >= p.y + p.h - 5
-                ){
-
-                    this.y = p.y + p.h;
-
-                    this.dy = 0;
-                }
-            }
-        }
-
-        if(this.x < 0){
-
-            this.x = 0;
-        }
-
-        if(this.x + this.w > canvas.width){
-
-            this.x = canvas.width - this.w;
-        }
-    }
+if(this.dy>0 && this.y+this.h-this.dy<=p.y){
+this.y=p.y-this.h;
+this.dy=0;
+this.g=true;
+}
+}
 }
 
-/* ---------------- CONTROLS ---------------- */
-
-const keys = {};
-
-window.addEventListener("keydown",(e)=>{
-
-    keys[e.code] = true;
-});
-
-window.addEventListener("keyup",(e)=>{
-
-    keys[e.code] = false;
-});
-
-const p1 = new Player(
-
-    200,
-    canvas.height-300,
-
-    "#ef4444",
-
-    {
-        left:"KeyA",
-        right:"KeyD",
-        jump:"KeyW"
-    }
-);
-
-const p2 = new Player(
-
-    canvas.width-300,
-    canvas.height-300,
-
-    "#3b82f6",
-
-    {
-        left:"ArrowLeft",
-        right:"ArrowRight",
-        jump:"ArrowUp"
-    }
-);
-
-function controls(player){
-
-    player.dx = 0;
-
-    if(keys[player.controls.left]){
-
-        player.dx = -8;
-    }
-
-    if(keys[player.controls.right]){
-
-        player.dx = 8;
-    }
-
-    if(keys[player.controls.jump] && player.onGround){
-
-        player.dy = -17;
-    }
+if(this.x<0)this.x=0;
+if(this.x>1050)this.x=1050;
+}
 }
 
-/* ---------------- GAME ---------------- */
+/* ================= PLAYERS ================= */
 
-function startGame(){
+const p1=new P(200,100,"red");
+const p2=new P(800,100,"blue");
 
-    p1.name =
-        document.getElementById("p1name").value
-        || "Rot";
+/* ================= INPUT ================= */
 
-    p2.name =
-        document.getElementById("p2name").value
-        || "Blau";
+const k={};
 
-    document.getElementById("menu").style.display =
-        "none";
+window.addEventListener("keydown",e=>k[e.code]=true);
+window.addEventListener("keyup",e=>k[e.code]=false);
 
-    gameStarted = true;
+/* ================= CONTROL ================= */
+
+function ctrl(p,l,r,j){
+
+p.dx=0;
+
+if(k[l])p.dx=-6;
+if(k[r])p.dx=6;
+
+if(k[j]&&p.g)p.dy=-15;
 }
 
-function collision(a,b){
+/* ================= START ================= */
 
-    return(
+function start(){
 
-        a.x < b.x+b.w &&
-        a.x+a.w > b.x &&
-        a.y < b.y+b.h &&
-        a.y+a.h > b.y
-    );
+p1.c=document.getElementById("p1color").value;
+p2.c=document.getElementById("p2color").value;
+
+document.getElementById("menu").style.display="none";
+
+game=true;
 }
+
+/* ================= RESET ================= */
 
 function reset(){
-
-    p1.x = 200;
-    p1.y = canvas.height-300;
-    p1.dy = 0;
-
-    p2.x = canvas.width-300;
-    p2.y = canvas.height-300;
-    p2.dy = 0;
+p1.x=200;p2.x=800;
+p1.y=100;p2.y=100;
 }
 
-/* ---------------- DRAW ---------------- */
+/* ================= COLLISION ================= */
 
-function drawBackground(){
-
-    const grad =
-        ctx.createLinearGradient(0,0,0,canvas.height);
-
-    grad.addColorStop(0,"#0b1020");
-    grad.addColorStop(1,"#111827");
-
-    ctx.fillStyle = grad;
-
-    ctx.fillRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-    // Sterne
-
-    ctx.fillStyle = "white";
-
-    for(let s of stars){
-
-        ctx.beginPath();
-
-        ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-
-        ctx.fill();
-    }
-
-    // Mond
-
-    ctx.fillStyle = "#f8fafc";
-
-    ctx.beginPath();
-
-    ctx.arc(
-        canvas.width-180,
-        120,
-        60,
-        0,
-        Math.PI*2
-    );
-
-    ctx.fill();
+function col(a,b){
+return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
 }
 
-function drawPlatforms(){
+/* ================= END SCREEN ================= */
 
-    const platforms = getPlatforms();
+function endGame(w){
 
-    for(let p of platforms){
+winner=w;
 
-        ctx.fillStyle = "#334155";
+document.getElementById("end").style.display="flex";
 
-        ctx.fillRect(
-            p.x,
-            p.y,
-            p.w,
-            p.h
-        );
-
-        ctx.fillStyle = "#64748b";
-
-        ctx.fillRect(
-            p.x,
-            p.y,
-            p.w,
-            5
-        );
-    }
+document.getElementById("winnerText").innerText=w+" gewinnt!";
 }
 
-function drawScores(){
+/* ================= LOOP ================= */
 
-    ctx.fillStyle = "white";
+function loop(){
 
-    ctx.font = "bold 30px Arial";
+ctx.fillStyle="#0b1020";
+ctx.fillRect(0,0,1100,620);
 
-    ctx.fillText(
-
-        p1.name + ": " + p1.score,
-
-        40,
-
-        50
-    );
-
-    const rightText =
-        p2.name + ": " + p2.score;
-
-    const width =
-        ctx.measureText(rightText).width;
-
-    ctx.fillText(
-
-        rightText,
-
-        canvas.width - width - 40,
-
-        50
-    );
+for(let p of plat()){
+ctx.fillStyle="#334155";
+ctx.fillRect(p.x,p.y,p.w,p.h);
 }
 
-function drawWinner(){
+if(game && !winner){
 
-    ctx.fillStyle = "white";
+ctrl(p1,"KeyA","KeyD","KeyW");
+ctrl(p2,"ArrowLeft","ArrowRight","ArrowUp");
 
-    ctx.font = "bold 70px Arial";
+p1.upd();
+p2.upd();
 
-    const text =
-        winner + " gewinnt!";
-
-    const width =
-        ctx.measureText(text).width;
-
-    ctx.fillText(
-
-        text,
-
-        canvas.width/2 - width/2,
-
-        canvas.height/2
-    );
+if(col(p1,p2)){
+if(p1.dy>0 && p1.y<p2.y){
+p1.score++;
+reset();
+}
+if(p2.dy>0 && p2.y<p1.y){
+p2.score++;
+reset();
+}
 }
 
-/* ---------------- LOOP ---------------- */
-
-function gameLoop(){
-
-    drawBackground();
-
-    if(gameStarted && !winner){
-
-        controls(p1);
-        controls(p2);
-
-        p1.update();
-        p2.update();
-
-        if(collision(p1,p2)){
-
-            if(
-                p1.dy > 0 &&
-                p1.y < p2.y
-            ){
-
-                p1.score++;
-
-                reset();
-            }
-
-            else if(
-                p2.dy > 0 &&
-                p2.y < p1.y
-            ){
-
-                p2.score++;
-
-                reset();
-            }
-        }
-
-        if(p1.score >= 3){
-
-            winner = p1.name;
-        }
-
-        if(p2.score >= 3){
-
-            winner = p2.name;
-        }
-    }
-
-    drawPlatforms();
-
-    p1.draw();
-    p2.draw();
-
-    drawScores();
-
-    if(winner){
-
-        drawWinner();
-    }
-
-    requestAnimationFrame(gameLoop);
+if(p1.score>=5)endGame("P1");
+if(p2.score>=5)endGame("P2");
 }
 
-gameLoop();
+p1.draw();
+p2.draw();
+
+requestAnimationFrame(loop);
+}
+
+loop();
 
 </script>
 
@@ -754,4 +347,4 @@ gameLoop();
 </html>
 """
 
-components.html(html_code, height=1200)
+components.html(html_code, height=1000)
