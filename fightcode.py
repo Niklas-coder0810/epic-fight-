@@ -3,7 +3,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-html_code = """
+html = """
 <!DOCTYPE html>
 <html>
 <head>
@@ -23,16 +23,16 @@ html_code = """
 }
 
 body{
-    background:#050814;
     overflow:hidden;
+    background:#050814;
     font-family:Arial;
 }
 
 /* =========================================================
-   GAME WINDOW (RECTANGLE)
+   GAME FRAME (RECTANGLE ARCADE STYLE)
 ========================================================= */
 
-.game-container{
+.frame{
     position:absolute;
     top:50%;
     left:50%;
@@ -41,7 +41,7 @@ body{
     width:1200px;
     height:650px;
 
-    border-radius:16px;
+    border-radius:18px;
     overflow:hidden;
 
     border:2px solid rgba(255,255,255,0.08);
@@ -50,48 +50,48 @@ body{
 canvas{
     width:100%;
     height:100%;
+    display:block;
 }
 
 /* =========================================================
-   CHARACTER EDITOR (IMPORTANT NEW SYSTEM)
+   SCREENS SYSTEM
 ========================================================= */
 
-#editor{
+.screen{
     position:absolute;
     width:100%;
     height:100vh;
+}
 
+/* ================= EDITOR ================= */
+
+#editor{
     display:flex;
     justify-content:center;
     align-items:center;
-
     background:radial-gradient(circle,#0b1225,#050814);
-
     z-index:100;
 }
 
 .panel{
-    width:500px;
+    width:520px;
     background:#111c33;
     padding:25px;
-    border-radius:18px;
+    border-radius:16px;
     color:white;
 }
 
 .panel h1{
+    text-align:center;
     margin-bottom:10px;
 }
 
-.row{
-    margin-top:10px;
-}
-
-select,input{
+.panel input, .panel select{
     width:100%;
     padding:10px;
-    margin-top:5px;
-    border-radius:10px;
+    margin-top:8px;
     border:none;
+    border-radius:8px;
     background:#24324d;
     color:white;
 }
@@ -106,17 +106,17 @@ select,input{
     width:100%;
     display:flex;
     justify-content:space-between;
-    padding:0 30px;
+    padding:0 25px;
     color:white;
     font-weight:bold;
-    z-index:5;
+    z-index:10;
 }
 
 /* =========================================================
    SCORE ANIMATION
 ========================================================= */
 
-#scoreAnim{
+#anim{
     position:absolute;
     top:50%;
     left:50%;
@@ -142,7 +142,7 @@ select,input{
     z-index:150;
 }
 
-.pauseBox{
+.box{
     background:#1e293b;
     padding:20px;
     color:white;
@@ -159,99 +159,89 @@ select,input{
    CHARACTER EDITOR
 ======================================================= -->
 
-<div id="editor">
+<div id="editor" class="screen">
 
-    <div class="panel">
+<div class="panel">
 
-        <h1>CHARACTER EDIT</h1>
+<h1>CHARACTER CREATOR</h1>
 
-        <div class="row">Name P1</div>
-        <input id="p1name">
+<h3>P1</h3>
+<input id="p1name" placeholder="Name">
+<select id="p1color">
+<option value="red">Red</option>
+<option value="blue">Blue</option>
+<option value="green">Green</option>
+</select>
 
-        <div class="row">Color</div>
-        <select id="p1color">
-            <option value="#ef4444">Red</option>
-            <option value="#3b82f6">Blue</option>
-            <option value="#22c55e">Green</option>
-        </select>
+<select id="p1hat">
+<option value="none">No Hat</option>
+<option value="hat">Hat</option>
+<option value="cap">Cap</option>
+</select>
 
-        <div class="row">Hat</div>
-        <select id="p1hat">
-            <option value="none">None</option>
-            <option value="hat">Hat</option>
-            <option value="cap">Cap</option>
-        </select>
+<select id="p1glass">
+<option value="none">No Glasses</option>
+<option value="sun">Sunglasses</option>
+</select>
 
-        <div class="row">Glasses</div>
-        <select id="p1glass">
-            <option value="none">None</option>
-            <option value="sunglasses">Sunglasses</option>
-        </select>
+<hr>
 
-        <hr style="margin:10px 0">
+<h3>P2</h3>
+<input id="p2name" placeholder="Name">
+<select id="p2color">
+<option value="blue">Blue</option>
+<option value="red">Red</option>
+<option value="green">Green</option>
+</select>
 
-        <div class="row">Name P2</div>
-        <input id="p2name">
+<select id="p2hat">
+<option value="none">No Hat</option>
+<option value="hat">Hat</option>
+<option value="cap">Cap</option>
+</select>
 
-        <div class="row">Color</div>
-        <select id="p2color">
-            <option value="#3b82f6">Blue</option>
-            <option value="#ef4444">Red</option>
-            <option value="#22c55e">Green</option>
-        </select>
+<select id="p2glass">
+<option value="none">No Glasses</option>
+<option value="sun">Sunglasses</option>
+</select>
 
-        <div class="row">Hat</div>
-        <select id="p2hat">
-            <option value="none">None</option>
-            <option value="hat">Hat</option>
-            <option value="cap">Cap</option>
-        </select>
+<button onclick="start()" style="margin-top:15px;width:100%;padding:12px;background:#2563eb;color:white;border:none;border-radius:8px;">
+START GAME
+</button>
 
-        <div class="row">Glasses</div>
-        <select id="p2glass">
-            <option value="none">None</option>
-            <option value="sunglasses">Sunglasses</option>
-        </select>
-
-        <button onclick="startGame()" style="margin-top:15px;width:100%;padding:12px;background:#2563eb;color:white;border:none;border-radius:10px;">
-        START
-        </button>
-
-    </div>
+</div>
 
 </div>
 
 <!-- =======================================================
-   HUD + SCORE
+   HUD + ANIMATION + PAUSE
 ======================================================= -->
 
 <div id="hud"></div>
-<div id="scoreAnim"></div>
-
-<!-- =======================================================
-   PAUSE
-======================================================= -->
+<div id="anim"></div>
 
 <div id="pause">
-    <div class="pauseBox">
-        PAUSED
-        <br><br>
-        <button onclick="resume()">Resume</button>
-        <button onclick="location.reload()">Menu</button>
-    </div>
+<div class="box">
+PAUSE
+<br><br>
+<button onclick="resume()">Resume</button>
+<button onclick="location.reload()">Exit</button>
+</div>
 </div>
 
 <!-- =======================================================
-   GAME
+   GAME FRAME
 ======================================================= -->
 
-<div class="game-container">
+<div class="frame">
 <canvas id="c"></canvas>
 </div>
 
 <script>
 
-/* ================= CANVAS ================= */
+/* =========================================================
+   SETUP
+========================================================= */
 
 const c=document.getElementById("c");
 const ctx=c.getContext("2d");
@@ -259,75 +249,82 @@ const ctx=c.getContext("2d");
 c.width=1200;
 c.height=650;
 
-/* ================= STATE ================= */
+/* =========================================================
+   STATE
+========================================================= */
 
 let game=false;
 let pause=false;
 let winner=null;
 
-/* ================= SCORE SYSTEM ================= */
+/* =========================================================
+   ANIMATION
+========================================================= */
 
-function showScore(text){
-    const s=document.getElementById("scoreAnim");
-    s.innerText=text;
-    s.style.display="block";
-
-    setTimeout(()=>{
-        s.style.display="none";
-    },2500);
+function anim(text){
+const a=document.getElementById("anim");
+a.innerText=text;
+a.style.display="block";
+setTimeout(()=>a.style.display="none",2500);
 }
 
-/* ================= PLATFORMS ================= */
+/* =========================================================
+   PLATFORM
+========================================================= */
 
-function platforms(){
+function plat(){
 return[
-{ x:0,y:600,w:1200,h:50},
-{ x:150,y:450,w:300,h:20},
-{ x:750,y:450,w:300,h:20},
-{ x:450,y:320,w:300,h:20},
+{x:0,y:600,w:1200,h:50},
+{x:200,y:450,w:300,h:20},
+{x:700,y:450,w:300,h:20},
+{x:450,y:320,w:300,h:20}
 ];
 }
 
-/* ================= PLAYER ================= */
+/* =========================================================
+   PLAYER
+========================================================= */
 
-class Player{
-constructor(x,y,color){
+class P{
+constructor(x,y,c){
 this.x=x;
 this.y=y;
 this.w=50;
 this.h=80;
 this.dx=0;
 this.dy=0;
-this.color=color;
-this.score=0;
-this.onGround=false;
+this.c=c;
+this.s=0;
+this.g=false;
 }
 
 draw(){
-ctx.fillStyle=this.color;
+
+ctx.fillStyle=this.c;
 ctx.fillRect(this.x,this.y,this.w,this.h);
 
 // face
 ctx.fillStyle="white";
-ctx.fillRect(this.x+10,this.y+20,8,8);
-ctx.fillRect(this.x+30,this.y+20,8,8);
+ctx.fillRect(this.x+10,this.y+20,6,6);
+ctx.fillRect(this.x+30,this.y+20,6,6);
+
+ctx.fillRect(this.x+20,this.y+35,8,3);
 }
 
-update(){
+upd(){
 
 this.dy+=0.8;
 this.x+=this.dx;
 this.y+=this.dy;
 
-this.onGround=false;
+this.g=false;
 
-for(let p of platforms()){
+for(let p of plat()){
 if(this.x<p.x+p.w&&this.x+this.w>p.x&&this.y<p.y+p.h&&this.y+this.h>p.y){
-
 if(this.dy>0){
 this.y=p.y-this.h;
 this.dy=0;
-this.onGround=true;
+this.g=true;
 }
 }
 }
@@ -337,101 +334,113 @@ if(this.x>1150)this.x=1150;
 }
 }
 
-/* ================= PLAYERS ================= */
+/* =========================================================
+   PLAYERS
+========================================================= */
 
-const p1=new Player(200,100,"red");
-const p2=new Player(800,100,"blue");
+const p1=new P(200,100,"red");
+const p2=new P(800,100,"blue");
 
-/* ================= INPUT ================= */
+/* =========================================================
+   INPUT
+========================================================= */
 
-const keys={};
+const k={};
 
 window.addEventListener("keydown",e=>{
-keys[e.code]=true;
+k[e.code]=true;
 if(e.code==="Escape")pause=!pause;
 });
+window.addEventListener("keyup",e=>k[e.code]=false);
 
-window.addEventListener("keyup",e=>{
-keys[e.code]=false;
-});
+/* =========================================================
+   CONTROL
+========================================================= */
 
-/* ================= CONTROL ================= */
-
-function control(p,l,r,j){
+function ctrl(p,l,r,j){
 
 p.dx=0;
 
-if(keys[l])p.dx=-6;
-if(keys[r])p.dx=6;
+if(k[l])p.dx=-6;
+if(k[r])p.dx=6;
 
-if(keys[j]&&p.onGround){
-p.dy=-14;
-}
+if(k[j]&&p.g)p.dy=-14;
 }
 
-/* ================= START ================= */
+/* =========================================================
+   START
+========================================================= */
 
-function startGame(){
+function start(){
 
-p1.color=document.getElementById("p1color").value;
-p2.color=document.getElementById("p2color").value;
+p1.c=document.getElementById("p1color").value;
+p2.c=document.getElementById("p2color").value;
 
 document.getElementById("editor").style.display="none";
 
 game=true;
 }
 
-/* ================= LOOP ================= */
+/* =========================================================
+   RESET
+========================================================= */
+
+function reset(){
+p1.x=200;p2.x=800;
+p1.y=100;p2.y=100;
+}
+
+/* =========================================================
+   LOOP
+========================================================= */
 
 function loop(){
 
 ctx.fillStyle="#050814";
 ctx.fillRect(0,0,1200,650);
 
-for(let p of platforms()){
+for(let p of plat()){
 ctx.fillStyle="#334155";
 ctx.fillRect(p.x,p.y,p.w,p.h);
 }
 
 if(game && !pause && !winner){
 
-control(p1,"KeyA","KeyD","KeyW");
-control(p2,"ArrowLeft","ArrowRight","ArrowUp");
+ctrl(p1,"KeyA","KeyD","KeyW");
+ctrl(p2,"ArrowLeft","ArrowRight","ArrowUp");
 
-p1.update();
-p2.update();
+p1.upd();
+p2.upd();
 
 if(p1.x<p2.x+50&&p1.x+50>p2.x&&p1.y<p2.y+80&&p1.y+80>p2.y){
 
 if(p1.dy>0){
-p1.score++;
-showScore(p1.score);
-p1.x=200;p2.x=800;
-p1.y=100;p2.y=100;
+p1.s++;
+anim(p1.s);
+reset();
 }
 
 if(p2.dy>0){
-p2.score++;
-showScore(p2.score);
-p1.x=200;p2.x=800;
-p1.y=100;p2.y=100;
+p2.s++;
+anim(p2.s);
+reset();
 }
 }
 
-if(p1.score>=5)winner="P1";
-if(p2.score>=5)winner="P2";
+if(p1.s>=5)winner="P1";
+if(p2.s>=5)winner="P2";
 }
 
 p1.draw();
 p2.draw();
 
 document.getElementById("hud").innerHTML=
-"Player1: "+p1.score+" | Player2: "+p2.score;
+"P1: "+p1.s+" | P2: "+p2.s;
 
 if(winner){
 ctx.fillStyle="white";
-ctx.font="60px Arial";
-ctx.fillText(winner+" WINS!",400,300);
+ctx.font="50px Arial";
+ctx.fillText(winner+" WIN!",450,300);
 }
 
 requestAnimationFrame(loop);
@@ -439,10 +448,15 @@ requestAnimationFrame(loop);
 
 loop();
 
+function resume(){
+pause=false;
+document.getElementById("pause").style.display="none";
+}
+
 </script>
 
 </body>
 </html>
 """
 
-components.html(html_code, height=900)
+components.html(html, height=900)
