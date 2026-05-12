@@ -1,5 +1,3 @@
-# app.py
-
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -10,6 +8,7 @@ html_code = """
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
 
 <style>
 
@@ -21,152 +20,108 @@ html_code = """
 
 body{
     overflow:hidden;
-    font-family:Arial, sans-serif;
-    background:#0b1020;
+    font-family:Arial;
+    background:#070b18;
 }
 
 canvas{
-    display:block;
     width:100vw;
     height:100vh;
+    display:block;
 }
 
 /* ---------------- MENU ---------------- */
 
 #menu{
-
     position:absolute;
-
     width:100%;
     height:100vh;
-
     display:flex;
-
     justify-content:center;
     align-items:center;
-
-    background:rgba(5,10,25,0.85);
-
-    z-index:10;
+    background:rgba(0,0,0,0.75);
+    z-index:20;
 }
 
 .menu-box{
-
-    width:min(90vw,550px);
-
-    background:rgba(20,30,55,0.95);
-
-    border:1px solid rgba(255,255,255,0.08);
-
-    border-radius:28px;
-
+    width:min(520px,92vw);
+    background:#111c33;
     padding:40px;
-
+    border-radius:25px;
     text-align:center;
-
-    box-shadow:0 0 50px rgba(0,0,0,0.5);
-
-    backdrop-filter:blur(10px);
+    color:white;
+    box-shadow:0 0 50px rgba(0,0,0,0.6);
 }
 
 .menu-box h1{
-
-    color:#f8fafc;
-
-    font-size:56px;
-
-    margin-bottom:12px;
+    font-size:54px;
+    margin-bottom:10px;
 }
 
-.subtitle{
-
+.menu-box p{
     color:#94a3b8;
-
-    margin-bottom:28px;
-
-    font-size:18px;
+    margin-bottom:20px;
 }
 
 .input-label{
-
-    color:#cbd5e1;
-
     text-align:left;
-
-    margin-top:16px;
-
-    margin-bottom:8px;
-
-    font-size:16px;
-
+    margin-top:15px;
+    margin-bottom:5px;
+    color:#cbd5e1;
     font-weight:bold;
 }
 
 .menu-box input{
-
     width:100%;
-
-    padding:16px;
-
+    padding:14px;
+    border-radius:12px;
     border:none;
-
-    border-radius:14px;
-
     background:#24324d;
-
     color:white;
-
     font-size:18px;
-
     outline:none;
-
-    border:2px solid transparent;
-}
-
-.menu-box input:focus{
-
-    border:2px solid #60a5fa;
 }
 
 .menu-box button{
-
     width:100%;
-
-    margin-top:28px;
-
-    padding:18px;
-
+    margin-top:25px;
+    padding:16px;
     border:none;
-
-    border-radius:16px;
-
-    font-size:22px;
-
+    border-radius:14px;
+    font-size:20px;
     font-weight:bold;
-
     color:white;
-
     cursor:pointer;
-
     background:linear-gradient(to right,#2563eb,#38bdf8);
-
-    transition:0.2s;
 }
 
-.menu-box button:hover{
+/* ---------------- POPUP ---------------- */
 
-    transform:scale(1.03);
+#popup{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    font-size:60px;
+    color:white;
+    display:none;
+    z-index:30;
+    font-weight:bold;
 }
 
-.controls{
+/* ---------------- HUD ---------------- */
 
-    margin-top:22px;
-
-    color:#cbd5e1;
-
-    line-height:2;
-
-    font-size:17px;
+#hud{
+    position:absolute;
+    top:15px;
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    padding:0 30px;
+    color:white;
+    font-size:22px;
+    font-weight:bold;
+    z-index:5;
 }
 
 </style>
@@ -175,137 +130,110 @@ canvas{
 <body>
 
 <div id="menu">
-
     <div class="menu-box">
-
         <h1>🌙 Jump Battle</h1>
+        <p>Gib eure Namen ein und starte das Spiel</p>
 
-        <div class="subtitle">
-            Gib eure Namen ein und startet das Duell
-        </div>
+        <div class="input-label">Spieler 1 (WASD)</div>
+        <input id="p1name" placeholder="Name Spieler 1">
 
-        <div class="input-label">
-            Spieler 1 Name
-        </div>
+        <div class="input-label">Spieler 2 (Pfeiltasten)</div>
+        <input id="p2name" placeholder="Name Spieler 2">
 
-        <input
-            id="p1name"
-            type="text"
-            placeholder="z.B. Max"
-            value=""
-        >
-
-        <div class="input-label">
-            Spieler 2 Name
-        </div>
-
-        <input
-            id="p2name"
-            type="text"
-            placeholder="z.B. Leon"
-            value=""
-        >
-
-        <div class="controls">
-
-            <div>🔴 Spieler 1 → WASD</div>
-            <div>🔵 Spieler 2 → Pfeiltasten</div>
-            <div>👑 Auf den Kopf springen = Punkt</div>
-            <div>🏆 Erster bis 3 gewinnt</div>
-
-        </div>
-
-        <button onclick="startGame()">
-            Spiel starten
-        </button>
-
+        <button onclick="startGame()">Start</button>
     </div>
-
 </div>
+
+<div id="popup"></div>
+
+<div id="hud"></div>
 
 <canvas id="game"></canvas>
 
 <script>
 
+/* ---------------- CANVAS ---------------- */
+
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-function resizeCanvas(){
-
+function resize(){
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
+resize();
+window.addEventListener("resize", resize);
 
-resizeCanvas();
-
-window.addEventListener("resize", resizeCanvas);
-
-const gravity = 0.8;
+/* ---------------- GAME STATE ---------------- */
 
 let gameStarted = false;
 let winner = null;
 
-/* ---------------- STARS ---------------- */
+const gravity = 0.8;
+
+/* ---------------- BACKGROUND ---------------- */
 
 const stars = [];
 
-for(let i=0;i<150;i++){
-
+for(let i=0;i<200;i++){
     stars.push({
-
         x:Math.random()*window.innerWidth,
         y:Math.random()*window.innerHeight,
         r:Math.random()*2
     });
 }
 
+/* ---------------- POPUP ---------------- */
+
+function popup(text){
+    const p=document.getElementById("popup");
+    p.innerText=text;
+    p.style.display="block";
+
+    setTimeout(()=>{
+        p.style.display="none";
+    },2000);
+}
+
+/* ---------------- BOOST ---------------- */
+
+let boost = {
+    p1:0,
+    p2:0
+};
+
+/* ---------------- COINS ---------------- */
+
+let coins = [];
+
+function spawnCoin(){
+    coins.push({
+        x:Math.random()*canvas.width,
+        y:Math.random()*canvas.height/2
+    });
+}
+
+setInterval(()=>{
+    if(gameStarted && !winner){
+        if(Math.random() < 0.6){
+            spawnCoin();
+        }
+    }
+},3000);
+
 /* ---------------- PLATFORMS ---------------- */
 
-function getPlatforms(){
-
+function platforms(){
     return [
+        {x:0,y:canvas.height-50,w:canvas.width,h:50},
 
-        {
-            x:0,
-            y:canvas.height-45,
-            w:canvas.width,
-            h:45
-        },
+        {x:150,y:canvas.height-220,w:320,h:20},
+        {x:canvas.width-470,y:canvas.height-220,w:320,h:20},
 
-        {
-            x:150,
-            y:canvas.height-220,
-            w:340,
-            h:24
-        },
+        {x:canvas.width/2-170,y:canvas.height-380,w:340,h:20},
 
-        {
-            x:canvas.width-490,
-            y:canvas.height-220,
-            w:340,
-            h:24
-        },
-
-        {
-            x:canvas.width/2-170,
-            y:canvas.height-380,
-            w:340,
-            h:24
-        },
-
-        {
-            x:120,
-            y:canvas.height-540,
-            w:280,
-            h:24
-        },
-
-        {
-            x:canvas.width-400,
-            y:canvas.height-540,
-            w:280,
-            h:24
-        }
+        {x:120,y:canvas.height-540,w:280,h:20},
+        {x:canvas.width-400,y:canvas.height-540,w:280,h:20}
     ];
 }
 
@@ -314,378 +242,202 @@ function getPlatforms(){
 class Player{
 
     constructor(x,y,color,controls){
-
         this.x=x;
         this.y=y;
-
-        this.w=70;
-        this.h=100;
-
+        this.w=60;
+        this.h=90;
         this.color=color;
-
         this.dx=0;
         this.dy=0;
-
         this.score=0;
-
         this.controls=controls;
-
         this.onGround=false;
+        this.name="";
+    }
 
-        this.name="Spieler";
+    speed(){
+        return (boost[this.id] > 0) ? 12 : 7;
     }
 
     draw(){
-
-        // Kopf
-        ctx.fillStyle="#f1c27d";
-
-        ctx.beginPath();
-
-        ctx.arc(
-            this.x + this.w/2,
-            this.y + 20,
-            18,
-            0,
-            Math.PI*2
-        );
-
-        ctx.fill();
-
-        // Körper
         ctx.fillStyle=this.color;
-
-        ctx.fillRect(
-            this.x + 15,
-            this.y + 40,
-            40,
-            40
-        );
-
-        // Beine
-        ctx.fillRect(
-            this.x + 18,
-            this.y + 80,
-            12,
-            20
-        );
-
-        ctx.fillRect(
-            this.x + 40,
-            this.y + 80,
-            12,
-            20
-        );
-
-        // Arme
-        ctx.fillRect(
-            this.x + 2,
-            this.y + 45,
-            12,
-            10
-        );
-
-        ctx.fillRect(
-            this.x + 56,
-            this.y + 45,
-            12,
-            10
-        );
+        ctx.fillRect(this.x,this.y,this.w,this.h);
     }
 
     update(){
 
         this.dy += gravity;
-
         this.x += this.dx;
         this.y += this.dy;
 
         this.onGround = false;
 
-        const platforms = getPlatforms();
+        for(let p of platforms()){
 
-        for(let p of platforms){
-
-            const touching =
-
+            const hit =
                 this.x < p.x+p.w &&
                 this.x+this.w > p.x &&
                 this.y < p.y+p.h &&
                 this.y+this.h > p.y;
 
-            if(touching){
+            if(hit){
 
-                // OBEN landen
-                if(
-                    this.dy > 0 &&
-                    this.y + this.h - this.dy <= p.y
-                ){
-
+                // LANDEN
+                if(this.dy > 0 && this.y+this.h-this.dy <= p.y){
                     this.y = p.y - this.h;
-
                     this.dy = 0;
-
                     this.onGround = true;
                 }
 
-                // UNTEN blockieren
-                else if(
-                    this.dy < 0 &&
-                    this.y >= p.y + p.h - 5
-                ){
-
-                    this.y = p.y + p.h;
-
+                // DECKEL BLOCK
+                else if(this.dy < 0 && this.y >= p.y+p.h-5){
+                    this.y = p.y+p.h;
                     this.dy = 0;
                 }
             }
         }
 
-        if(this.x < 0){
-
-            this.x = 0;
-        }
-
-        if(this.x + this.w > canvas.width){
-
-            this.x = canvas.width - this.w;
-        }
+        if(this.x < 0) this.x = 0;
+        if(this.x + this.w > canvas.width) this.x = canvas.width - this.w;
     }
 }
 
-/* ---------------- CONTROLS ---------------- */
+/* ---------------- INPUT ---------------- */
 
 const keys = {};
 
-window.addEventListener("keydown",(e)=>{
+window.addEventListener("keydown",e=>keys[e.code]=true);
+window.addEventListener("keyup",e=>keys[e.code]=false);
 
-    keys[e.code] = true;
-});
+/* ---------------- PLAYERS ---------------- */
 
-window.addEventListener("keyup",(e)=>{
+const p1 = new Player(200,100,"#ef4444",{l:"KeyA",r:"KeyD",j:"KeyW"});
+const p2 = new Player(700,100,"#3b82f6",{l:"ArrowLeft",r:"ArrowRight",j:"ArrowUp"});
 
-    keys[e.code] = false;
-});
+p1.id="p1";
+p2.id="p2";
 
-const p1 = new Player(
+/* ---------------- CONTROLS ---------------- */
 
-    200,
-    canvas.height-300,
+function controls(p){
 
-    "#ef4444",
+    p.dx = 0;
 
-    {
-        left:"KeyA",
-        right:"KeyD",
-        jump:"KeyW"
-    }
-);
+    let sp = (boost[p.id] > 0) ? 11 : 7;
 
-const p2 = new Player(
+    if(keys[p.controls.l]) p.dx = -sp;
+    if(keys[p.controls.r]) p.dx = sp;
 
-    canvas.width-300,
-    canvas.height-300,
-
-    "#3b82f6",
-
-    {
-        left:"ArrowLeft",
-        right:"ArrowRight",
-        jump:"ArrowUp"
-    }
-);
-
-function controls(player){
-
-    player.dx = 0;
-
-    if(keys[player.controls.left]){
-
-        player.dx = -8;
-    }
-
-    if(keys[player.controls.right]){
-
-        player.dx = 8;
-    }
-
-    if(keys[player.controls.jump] && player.onGround){
-
-        player.dy = -17;
+    if(keys[p.controls.j] && p.onGround){
+        p.dy = -16;
     }
 }
 
-/* ---------------- GAME ---------------- */
+/* ---------------- START ---------------- */
 
 function startGame(){
 
-    p1.name =
-        document.getElementById("p1name").value
-        || "Rot";
+    p1.name = document.getElementById("p1name").value || "P1";
+    p2.name = document.getElementById("p2name").value || "P2";
 
-    p2.name =
-        document.getElementById("p2name").value
-        || "Blau";
-
-    document.getElementById("menu").style.display =
-        "none";
+    document.getElementById("menu").style.display="none";
 
     gameStarted = true;
 }
 
-function collision(a,b){
-
-    return(
-
-        a.x < b.x+b.w &&
-        a.x+a.w > b.x &&
-        a.y < b.y+b.h &&
-        a.y+a.h > b.y
-    );
-}
+/* ---------------- RESET ---------------- */
 
 function reset(){
 
-    p1.x = 200;
-    p1.y = canvas.height-300;
-    p1.dy = 0;
+    p1.x=200;p1.y=100;p1.dy=0;
+    p2.x=700;p2.y=100;p2.dy=0;
+}
 
-    p2.x = canvas.width-300;
-    p2.y = canvas.height-300;
-    p2.dy = 0;
+/* ---------------- COLLISION ---------------- */
+
+function collide(a,b){
+    return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
+}
+
+/* ---------------- COINS ---------------- */
+
+function drawCoins(){
+
+    ctx.fillStyle="gold";
+
+    for(let c of coins){
+
+        ctx.beginPath();
+        ctx.arc(c.x,c.y,8,0,Math.PI*2);
+        ctx.fill();
+    }
+}
+
+function checkCoins(p){
+
+    coins = coins.filter(c=>{
+
+        let hit =
+            p.x < c.x+10 &&
+            p.x+p.w > c.x &&
+            p.y < c.y+10 &&
+            p.y+p.h > c.y;
+
+        if(hit){
+
+            boost[p.id] = 8*60;
+
+            popup(p.name + " SPEED BOOST!");
+
+            return false;
+        }
+
+        return true;
+    });
 }
 
 /* ---------------- DRAW ---------------- */
 
 function drawBackground(){
 
-    const grad =
-        ctx.createLinearGradient(0,0,0,canvas.height);
+    const g = ctx.createLinearGradient(0,0,0,canvas.height);
 
-    grad.addColorStop(0,"#0b1020");
-    grad.addColorStop(1,"#111827");
+    g.addColorStop(0,"#070b18");
+    g.addColorStop(1,"#111827");
 
-    ctx.fillStyle = grad;
-
-    ctx.fillRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
+    ctx.fillStyle=g;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
     // Sterne
-
-    ctx.fillStyle = "white";
-
+    ctx.fillStyle="white";
     for(let s of stars){
-
         ctx.beginPath();
-
         ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-
         ctx.fill();
     }
 
     // Mond
-
-    ctx.fillStyle = "#f8fafc";
-
+    ctx.fillStyle="#f8fafc";
     ctx.beginPath();
-
-    ctx.arc(
-        canvas.width-180,
-        120,
-        60,
-        0,
-        Math.PI*2
-    );
-
+    ctx.arc(canvas.width-150,120,60,0,Math.PI*2);
     ctx.fill();
 }
 
 function drawPlatforms(){
 
-    const platforms = getPlatforms();
+    for(let p of platforms()){
 
-    for(let p of platforms){
+        ctx.fillStyle="#334155";
+        ctx.fillRect(p.x,p.y,p.w,p.h);
 
-        ctx.fillStyle = "#334155";
-
-        ctx.fillRect(
-            p.x,
-            p.y,
-            p.w,
-            p.h
-        );
-
-        ctx.fillStyle = "#64748b";
-
-        ctx.fillRect(
-            p.x,
-            p.y,
-            p.w,
-            5
-        );
+        ctx.fillStyle="#64748b";
+        ctx.fillRect(p.x,p.y,p.w,4);
     }
-}
-
-function drawScores(){
-
-    ctx.fillStyle = "white";
-
-    ctx.font = "bold 30px Arial";
-
-    ctx.fillText(
-
-        p1.name + ": " + p1.score,
-
-        40,
-
-        50
-    );
-
-    const rightText =
-        p2.name + ": " + p2.score;
-
-    const width =
-        ctx.measureText(rightText).width;
-
-    ctx.fillText(
-
-        rightText,
-
-        canvas.width - width - 40,
-
-        50
-    );
-}
-
-function drawWinner(){
-
-    ctx.fillStyle = "white";
-
-    ctx.font = "bold 70px Arial";
-
-    const text =
-        winner + " gewinnt!";
-
-    const width =
-        ctx.measureText(text).width;
-
-    ctx.fillText(
-
-        text,
-
-        canvas.width/2 - width/2,
-
-        canvas.height/2
-    );
 }
 
 /* ---------------- LOOP ---------------- */
 
-function gameLoop(){
+function loop(){
 
     drawBackground();
 
@@ -697,56 +449,52 @@ function gameLoop(){
         p1.update();
         p2.update();
 
-        if(collision(p1,p2)){
+        checkCoins(p1);
+        checkCoins(p2);
 
-            if(
-                p1.dy > 0 &&
-                p1.y < p2.y
-            ){
+        if(boost.p1>0)boost.p1--;
+        if(boost.p2>0)boost.p2--;
 
+        if(collide(p1,p2)){
+
+            if(p1.dy>0 && p1.y<p2.y){
                 p1.score++;
-
+                popup(p1.name+" +1");
                 reset();
             }
 
-            else if(
-                p2.dy > 0 &&
-                p2.y < p1.y
-            ){
-
+            if(p2.dy>0 && p2.y<p1.y){
                 p2.score++;
-
+                popup(p2.name+" +1");
                 reset();
             }
         }
 
-        if(p1.score >= 3){
-
-            winner = p1.name;
-        }
-
-        if(p2.score >= 3){
-
-            winner = p2.name;
-        }
+        if(p1.score>=3)winner=p1.name;
+        if(p2.score>=3)winner=p2.name;
     }
 
     drawPlatforms();
 
+    drawCoins();
+
     p1.draw();
     p2.draw();
 
-    drawScores();
+    document.getElementById("hud").innerHTML =
+        p1.name+" : "+p1.score+" | "+p2.name+" : "+p2.score;
 
     if(winner){
 
-        drawWinner();
+        ctx.fillStyle="white";
+        ctx.font="60px Arial";
+        ctx.fillText(winner+" gewinnt!",canvas.width/2-200,canvas.height/2);
     }
 
-    requestAnimationFrame(gameLoop);
+    requestAnimationFrame(loop);
 }
 
-gameLoop();
+loop();
 
 </script>
 
